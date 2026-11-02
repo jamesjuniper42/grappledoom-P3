@@ -6,7 +6,7 @@ and CREDITS.txt for its license and credits.
 
 This package also includes GZDoom.
 (For a version without GZDoom, view branch just-mod-and-freedoom)
-(And if you don't want freedoom2 either, you just need GrappleMod.pk, README and run_grapple are optional)
+(And if you don't want freedoom2 either, you just need GrappleMod.pk. README and run_grapple are optional)
 
 SETUP
 1. Run the game through run_grapple.bat.
