@@ -7,10 +7,9 @@ and CREDITS.txt for its license and credits.
 This file also includes GZDoom.
 
 SETUP
-1. Copy ALL files from this package into the same folder as gzdoom.exe.
-2. Double-click run_grapple.bat.
+1. Double-click run_grapple.bat.
    (Or run: gzdoom.exe -iwad freedoom2.wad -file GrappleMod.pk3 +map GRAPPLE1)
-3. If right click does nothing: open the console with ~ and type
+2. If right click does nothing: open the console with ~ and type
         bind mouse2 +altattack
 
 CONTROLS
