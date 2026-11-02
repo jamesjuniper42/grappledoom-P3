@@ -5,9 +5,11 @@ You do NOT need Doom 2. This package includes Freedoom: Phase 2
 and CREDITS.txt for its license and credits.
 
 This package also includes GZDoom.
+(For a version without GZDoom, view branch just-mod-and-freedoom)
+(And if you don't want freedoom2 either, you just need GrappleMod.pk, README and run_grapple are optional)
 
 SETUP
-1. run the game through run_grapple.bat.
+1. Run the game through run_grapple.bat.
    (alternatively, run: gzdoom.exe and add "-iwad freedoom2.wad -file GrappleMod.pk3 +map GRAPPLE1" to the command line)
 2. If right click does nothing: open the console with ~ and type
         bind mouse2 +altattack
