@@ -4,13 +4,13 @@ You do NOT need Doom 2. This package includes Freedoom: Phase 2
 (freedoom2.wad), a free replacement for the Doom 2 IWAD. See COPYING.txt
 and CREDITS.txt for its license and credits.
 
+This file also includes GZDoom.
+
 SETUP
-1. Download GZDoom (4.14 or newer) from https://zdoom.org/downloads and
-   unzip it.
-2. Copy ALL files from this package into the same folder as gzdoom.exe.
-3. Double-click run_grapple.bat.
+1. Copy ALL files from this package into the same folder as gzdoom.exe.
+2. Double-click run_grapple.bat.
    (Or run: gzdoom.exe -iwad freedoom2.wad -file GrappleMod.pk3 +map GRAPPLE1)
-4. If right click does nothing: open the console with ~ and type
+3. If right click does nothing: open the console with ~ and type
         bind mouse2 +altattack
 
 CONTROLS
