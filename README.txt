@@ -4,7 +4,7 @@ You do NOT need Doom 2. This package includes Freedoom: Phase 2
 (freedoom2.wad), a free replacement for the Doom 2 IWAD. See COPYING.txt
 and CREDITS.txt for its license and credits.
 
-(If you don't want freedoom2, you just need GrappleMod.pk, README and run_grapple are optional)
+(If you don't want freedoom2, you just need GrappleMod.pk. README and run_grapple are optional)
 
 SETUP
 1. Download GZDoom (4.14 or newer) from https://zdoom.org/downloads and
