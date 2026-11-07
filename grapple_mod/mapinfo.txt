@@ -18,4 +18,5 @@ map GRAPPLE2 "Grapple Speedway"
 DoomEdNums
 {
 	30001 = TrafficSpawner
+	30002 = ClusterDemon
 }

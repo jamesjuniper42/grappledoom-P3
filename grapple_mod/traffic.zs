@@ -139,7 +139,7 @@ class TrafficCar : Actor
 		+SHOOTABLE
 		+NOBLOOD
 		+NOGRAVITY
-		+DONTTHRUST
+		+NODAMAGETHRUST
 	}
 
 	States

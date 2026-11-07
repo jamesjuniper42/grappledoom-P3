@@ -18,6 +18,10 @@ MAPS
 GRAPPLE1  small test yard (run_grapple.bat).
 GRAPPLE2  the speedway (run_speedway.bat): a huge four-lane loop under open sky with
           traffic. Two lanes drive each way. Shoot cars to make them swerve and blow up.
+
+CLUSTER DEMON  a fast cacodemon variant (placed in both maps). Flies at 3x run speed, slows
+          to 0.5x within 20 m, fires twice as often. Its shot explodes like a rocket, then
+          throws three gravity-affected bomblets that each explode on impact.
           Hook a car head-on and you get launched and hurt; hit one from behind and you
           take on its speed. Or in the console: map GRAPPLE2
 

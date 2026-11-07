@@ -1,6 +1,7 @@
 version "4.0"
 
 #include "traffic.zs"
+#include "cluster.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a
@@ -264,10 +265,10 @@ class GrapplePlayer : DoomPlayer
 		if (pending) return;
 
 		FLineTraceData t;
-		LineTrace(angle, MAX_RANGE, pitch, 0, player.viewheight, 0, 0, t);
+		LineTrace(angle, MAX_RANGE, pitch, TRF_NOSKY, player.viewheight, 0, 0, t);
 
 		// Nothing hit: do nothing. Enemies and other shootable actors are valid anchors.
-		if (t.HitType == TRACE_HitNone) return;
+		if (t.HitType == TRACE_HitNone || t.HitType == TRACE_HasHitSky || t.HitType == TRACE_CrossingPortal) return;
 		if (t.HitType == TRACE_HitActor && !t.HitActor) return;
 
 		// Open sky is not terrain.
