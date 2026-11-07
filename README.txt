@@ -28,6 +28,9 @@ CLUSTER DEMON  a fast cacodemon variant (placed in both maps). Flies at 3x run s
 LEAPER  a mancubus (speedway only) that leaps 5 m high and 10 m forward at you when you are
           more than 30 m away. It cannot shoot while in the air.
 
+INVINCIBILITY  open the console (~) and type  invincible  to toggle it on and off.
+          (The built-in  god  command does the same thing.)
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook
