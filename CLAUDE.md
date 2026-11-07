@@ -26,7 +26,8 @@ grapple_mod/
 ## Design spec (what the user asked for)
 - Right mouse fires a hook that travels straight from the crosshair.
 - Target within 5 m: attaches instantly. Farther: about 1/3 s delay.
-- The hook only grapples terrain. If it hits an enemy (or open sky), do nothing.
+- The hook grapples terrain and enemies. On an enemy it pulls the player to it, tracking it while it moves, and stops at its body. Open sky is ignored.
+- Ledge assist: if the hook hits the face of a step or ledge whose top is within 3 m above the hit point (with headroom), the pull goes in two legs: straight up in front of the face until the feet clear the lip, then over the lip onto the ledge.
 - If it hits a door or button line (a line with a player-use special), activate that line like pressing use, and do not pull the player.
 - The hook is the only way to move: no WASD, arrows, strafing or jumping.
 - After a pull, the player slides with very little friction. Max speed is clamped to 2x Doomguy's run speed.
@@ -37,7 +38,7 @@ grapple_mod/
 - Tuning constants sit at the top of the class: `NEAR_RANGE` (160 = 5 m), `FAR_DELAY` (12 tics), `MAX_RANGE`, `MAX_SPEED` (30.2 = 2x run speed of about 15.1), `PULL_MIN`, `PULL_ACCEL`, `ARRIVE_DIST`, `MAX_PULL`, `SLIDE_GROUND_KEEP`, `SLIDE_AIR_KEEP`, `SLIDE_STOP`. Change numbers here first when the feel is off.
 - State machine (`mstate`): `GS_IDLE`, `GS_PULL`, `GS_SLIDE`.
   - `Tick()` detects a right-click edge from `player.cmd.buttons` (`BT_ALTATTACK`) and calls `FireHook()`.
-  - `FireHook()` does a `LineTrace`, rejects actors and sky, computes `pullTarget`, then either arrives now or sets `pending` for `FAR_DELAY` tics.
+  - `FireHook()` does a `LineTrace`, rejects open sky, treats shootable actors as anchors (`hookTarget`, re-aimed every tic by `UpdateActorTarget()`), computes `pullTarget`, sets up ledge assist with `TryLedgeAssist()`, then either arrives now or sets `pending` for `FAR_DELAY` tics.
   - `HookArrived()` either activates the line (door or switch) or calls `BeginPull()`.
   - During `GS_PULL` the script sets `Vel` straight at `pullTarget` with gravity off. `stuckTics` ends the pull if the player stops making progress.
   - `EndPull()` turns the last real displacement into `slideVel` and enters `GS_SLIDE`.
@@ -51,14 +52,15 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - Zeroing `Player.ForwardMove` / `SideMove` / `Speed` actually stops keyboard walking. (An earlier `TweakSpeeds` override failed to compile in 4.14.2 and was removed.)
 - `gameinfo { PlayerClasses = ... }` in `mapinfo.txt` registering the class.
 - `LineTrace` flags and `FLineTraceData` fields, and the `skyflatnum` checks.
-- Hit-point offsets: hooking a ledge face leaves the player below the lip (no ledge assist yet).
+- Ledge assist (`TryLedgeAssist`) uses `Line.delta`, `Line.frontsector` / `backsector` and `t.LineSide` to find the wall normal and far side; the two-leg lift path is untested in-game. Tune `LEDGE_REACH`, `LEDGE_INSET`, `LEDGE_STANDOFF`, `LIFT_ARRIVE`.
+- Enemy hooks use `t.HitActor` and a standoff of both radii + 8 units.
 - Overall feel numbers (pull speed, slide friction, stop threshold) are untuned guesses.
 
 ## Test map GRAPPLE1
 - Main hall with three stepped platforms and a tower. Player start at (128, 128).
 - East door: a repeatable door (special 12) on the vestibule's east wall; hook it to open it. It leads to a corridor and a second room with two pillars.
 - West alcove switch (`SW1BRCOM`, special 12, tag 1) opens the north gate, which leads to an alcove with a medikit.
-- Shotgun, shells, medikits, two zombiemen and an imp are placed to test that the hook ignores enemies.
+- Shotgun, shells, medikits, two zombiemen and an imp are placed to test hooking enemies.
 - Textures and flats used: `STARTAN3`, `BIGDOOR2`, `DOORTRAK`, `SW1BRCOM`, `FLOOR4_8`, `CEIL3_5`, sky `SKY1`. All were verified to exist in `freedoom2.wad`.
 
 ## Working conventions
@@ -73,4 +75,4 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - Slide triggered by pull angle and ground contact instead of distance.
 - Mouse-steered air control while pulling or airborne.
 - Hook interactions with enemies (pull to them or pull small ones to the player).
-- Ledge assist, range or cooldown limits, a soft-lock fallback, and proximity doors.
+- Range or cooldown limits, a soft-lock fallback, and proximity doors.

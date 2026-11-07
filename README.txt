@@ -17,7 +17,8 @@ SETUP
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook
-ignores enemies and the sky.
+can latch onto enemies (you get pulled to them), ignores the sky, and
+automatically climbs onto ledges up to about 3 m above where it hits.
 
 TROUBLESHOOTING
 - Run it from a normal Windows folder (for example C:\Games\GZDoom), not a
