@@ -25,6 +25,8 @@ CLUSTER DEMON  a fast cacodemon variant (placed in both maps). Flies at 3x run s
           to 0.5x within 20 m, fires twice as often. Its shot explodes like a rocket, then
           throws three gravity-affected bomblets that each explode on impact.
 
+LEAPER  a mancubus (speedway only) that leaps 5 m high and 10 m forward at you when you are
+          more than 30 m away. It cannot shoot while in the air.
 
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way

@@ -2,6 +2,7 @@ version "4.0"
 
 #include "traffic.zs"
 #include "cluster.zs"
+#include "leap.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a

@@ -19,4 +19,5 @@ DoomEdNums
 {
 	30001 = TrafficSpawner
 	30002 = ClusterDemon
+	30003 = LeapMancubus
 }
