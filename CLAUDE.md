@@ -31,7 +31,7 @@ run_speedway.bat         launches GRAPPLE2
 
 ## Design spec (what the user asked for)
 - Right mouse fires a hook that travels straight from the crosshair.
-- Target within 5 m: attaches instantly. Farther: about 1/3 s delay.
+- The hook hitscans first to find the hit point. Within 5 m the hit point is the grapple point and it attaches instantly. Farther, the hook visibly flies to the point at 128 units/tic (at least 4 tics, so about 0.2 s at 30 m and 0.6 s at the 80 m max) and then connects and pulls.
 - The hook grapples terrain and enemies. On an enemy it pulls the player to it, tracking it while it moves, and stops at its body. Open sky is ignored.
 - Ledge assist: if the hook hits the face of a step or ledge whose top is within 3 m above the hit point (with headroom), the pull goes in two legs: straight up in front of the face until the feet clear the lip, then over the lip onto the ledge.
 - If it hits a door or button line (a line with a player-use special), activate that line like pressing use, and do not pull the player.
@@ -43,10 +43,10 @@ run_speedway.bat         launches GRAPPLE2
 
 ## How GrapplePlayer works (`zscript.zs`)
 - Units: 32 map units = 1 meter, 35 tics = 1 second.
-- Tuning constants sit at the top of the class: `NEAR_RANGE` (160 = 5 m), `FAR_DELAY` (12 tics), `MAX_RANGE`, `MAX_SPEED` (30.2 = 2x run speed of about 15.1), `PULL_MIN`, `PULL_ACCEL`, `ARRIVE_DIST`, `MAX_PULL`, `SLIDE_GROUND_KEEP`, `SLIDE_AIR_KEEP`, `SLIDE_STOP`. Change numbers here first when the feel is off.
+- Tuning constants sit at the top of the class: `NEAR_RANGE` (160 = 5 m), `HOOK_SPEED` (128 units/tic) and `MIN_FLIGHT` (4 tics), `MAX_RANGE`, `MAX_SPEED` (30.2 = 2x run speed of about 15.1), `PULL_MIN`, `PULL_ACCEL`, `ARRIVE_DIST`, `MAX_PULL`, `SLIDE_GROUND_KEEP`, `SLIDE_AIR_KEEP`, `SLIDE_STOP`. Change numbers here first when the feel is off.
 - State machine (`mstate`): `GS_IDLE`, `GS_PULL`, `GS_SLIDE`.
   - `Tick()` detects a right-click edge from `player.cmd.buttons` (`BT_ALTATTACK`) and calls `FireHook()`.
-  - `FireHook()` does a `LineTrace`, rejects open sky, treats shootable actors as anchors (`hookTarget`, re-aimed every tic by `UpdateActorTarget()`), computes `pullTarget`, sets up ledge assist with `TryLedgeAssist()`, then either arrives now or sets `pending` for `FAR_DELAY` tics.
+  - `FireHook()` does a `LineTrace`, rejects open sky, treats shootable actors as anchors (`hookTarget`, re-aimed every tic by `UpdateActorTarget()`), computes `pullTarget`, sets up ledge assist with `TryLedgeAssist()`, then either arrives now or sets `pending` for a distance-based flight time.
   - `HookArrived()` either activates the line (door or switch) or calls `BeginPull()`.
   - During `GS_PULL` the script sets `Vel` straight at `pullTarget` with gravity off. `stuckTics` ends the pull if the player stops making progress.
   - `EndPull()` turns the last real displacement into `slideVel` and enters `GS_SLIDE`.

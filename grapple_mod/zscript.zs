@@ -33,7 +33,8 @@ class GrapplePlayer : DoomPlayer
 {
 	// ---------------- tuning ----------------
 	const NEAR_RANGE  = 160.0;   // 5 m: hits closer than this attach instantly
-	const FAR_DELAY   = 12;      // tics (~1/3 s) for far hits to attach
+	const HOOK_SPEED  = 128.0;   // units/tic the hook flies at toward a far hit point
+	const MIN_FLIGHT  = 4;       // fewest tics a far hook takes to connect
 	const MAX_RANGE   = 2560.0;  // hook range (80 m)
 	const MAX_SPEED   = 30.2;    // 2x Doomguy's run speed (~15.1 units/tic)
 	const PULL_MIN    = 10.0;    // pull starts at least this fast (units/tic)
@@ -355,7 +356,7 @@ class GrapplePlayer : DoomPlayer
 		A_StartSound("weapons/sshotf", CHAN_AUTO);
 
 		pendTics = 0;
-		pendTotal = (dist <= NEAR_RANGE) ? 0 : FAR_DELAY;
+		pendTotal = (dist <= NEAR_RANGE) ? 0 : max(MIN_FLIGHT, int(ceil(dist / HOOK_SPEED)));
 		if (pendTotal == 0)
 		{
 			HookArrived();
@@ -438,7 +439,7 @@ class GrapplePlayer : DoomPlayer
 			A_StartSound("weapons/sshotl", CHAN_AUTO);
 			return;
 		}
-		// Overshoot guard: a far hook takes FAR_DELAY tics to attach, and we keep
+		// Overshoot guard: a far hook takes its flight time to attach, and we keep
 		// sliding meanwhile. If we've gone past the target since firing, pulling now
 		// would yank us backwards (yo-yo), so let the hook miss and keep sliding.
 		vector2 toNow = pullTarget.xy - pos.xy;
