@@ -14,6 +14,13 @@ SETUP
 2. If right click does nothing: open the console with ~ and type
         bind mouse2 +altattack
 
+MAPS
+GRAPPLE1  small test yard (run_grapple.bat).
+GRAPPLE2  the speedway (run_speedway.bat): a huge four-lane loop under open sky with
+          traffic. Two lanes drive each way. Shoot cars to make them swerve and blow up.
+          Hook a car head-on and you get launched and hurt; hit one from behind and you
+          take on its speed. Or in the console: map GRAPPLE2
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook

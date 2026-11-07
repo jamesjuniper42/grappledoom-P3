@@ -1,0 +1,1 @@
+DefaultBind mouse2 "+altattack"

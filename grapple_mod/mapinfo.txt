@@ -1,0 +1,21 @@
+gameinfo
+{
+	PlayerClasses = "GrapplePlayer"
+}
+
+map GRAPPLE1 "Grapple Yard"
+{
+	next = "GRAPPLE1"
+	sky1 = "SKY1"
+}
+
+map GRAPPLE2 "Grapple Speedway"
+{
+	next = "GRAPPLE2"
+	sky1 = "SKY1"
+}
+
+DoomEdNums
+{
+	30001 = TrafficSpawner
+}
