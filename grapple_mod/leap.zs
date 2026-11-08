@@ -56,7 +56,7 @@ class LeapMancubus : Fatso
 			&& Distance3D(target) > LEAP_RANGE && CheckSight(target))
 		{
 			BeginLeap();
-			return ResolveState("Leap");
+			return FindState("Leap");
 		}
 		A_Chase();
 		return null;
@@ -67,6 +67,9 @@ class LeapMancubus : Fatso
 	void BeginLeap()
 	{
 		A_FaceTarget();
+		CVar dbg = CVar.FindCVar('leap_debug');
+		if (dbg && dbg.GetBool())
+			Console.Printf("Leaper: leaping, distance %.0f units (%.1f m)", Distance3D(target), Distance3D(target) / 32.0);
 		double g = GetGravity();
 		double vz = sqrt(2.0 * g * LEAP_HEIGHT);
 		double airTime = 2.0 * vz / g;
@@ -88,7 +91,7 @@ class LeapMancubus : Fatso
 			leaping = false;
 			leapCooldown = LEAP_COOLDOWN;
 			Vel = (0, 0, Vel.z);
-			return ResolveState("See");
+			return FindState("See");
 		}
 		return null;
 	}
