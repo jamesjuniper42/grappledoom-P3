@@ -87,7 +87,7 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 
 ## Leaper (`leap.zs`)
 - `LeapMancubus : Fatso` (IWAD mancubus sprites). DoomEdNum 30003; two placed in GRAPPLE2 only (the yard is too small for a 30 m trigger).
-- `See` is 12 four-tic frames calling `ChaseOrLeap()`: if cooldown is over (70 tics), it is on the ground, the target is over 960 units (30 m) away and visible, it calls `BeginLeap()` and jumps to `Leap`.
+- `See` is 12 four-tic frames calling `ChaseOrLeap()`: if cooldown is over (35 tics, counted in `Tick()`), it is on the ground, the target is over 960 units (30 m) away and visible, it calls `BeginLeap()` and jumps to `Leap`.
 - `BeginLeap()` sets Vel from `GetGravity()`: vz = sqrt(2*g*160) for a 5 m peak, hs = 320 / airtime for 10 m forward on level ground, aimed at the target at takeoff.
 - `Leap` state runs only `LeapTick()` (never `A_Chase`), so it cannot start an attack mid-jump; `bNoPain` is set until it lands so a flinch cannot change state. Lands when vz <= 0 and on the floor (or after 90 tics).
 - Debug: console `leap_debug 1` (CVARINFO) prints a line each time a leaper starts a leap. No line means the conditions never held (not awake, no sight, under 30 m, cooldown).

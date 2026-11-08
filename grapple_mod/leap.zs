@@ -15,7 +15,7 @@ class LeapMancubus : Fatso
 	const LEAP_HEIGHT = 160.0;    // 5 m peak height
 	const LEAP_DIST = 320.0;      // 10 m forward travel
 	const LEAP_RANGE = 960.0;     // 30 m: only leap from farther than this
-	const LEAP_COOLDOWN = 70;     // tics after landing before it can leap again
+	const LEAP_COOLDOWN = 35;     // tics (1 s) after landing before it can leap again
 	const LEAP_MAX_TICS = 90;     // safety: give up waiting for a landing
 
 	int leapTics;
@@ -48,10 +48,17 @@ class LeapMancubus : Fatso
 		Loop;
 	}
 
+	// The cooldown counts real tics. (It used to count down inside ChaseOrLeap, which
+	// only runs every 4th tic, so the wait was four times too long.)
+	override void Tick()
+	{
+		Super.Tick();
+		if (leapCooldown > 0) leapCooldown--;
+	}
+
 	// Normal chasing, unless a leap is due.
 	State ChaseOrLeap()
 	{
-		if (leapCooldown > 0) leapCooldown--;
 		if (leapCooldown <= 0 && target && pos.z <= floorz + 1
 			&& Distance3D(target) > LEAP_RANGE && CheckSight(target))
 		{
