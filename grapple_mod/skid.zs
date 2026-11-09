@@ -103,11 +103,15 @@ class SkidBolt : Actor
 				StartSlide();
 			}
 		}
-		else
+		else if (bMissile)
 		{
 			slideTics++;
 			if (slideTics > SLIDE_LIFE)
 			{
+				// Stop sliding BEFORE exploding. Otherwise this branch runs again next
+				// tic and returns early, so Super.Tick() never runs, the Death state
+				// never advances and the bolt hangs there forever.
+				sliding = false;
 				ExplodeMissile(null, null);
 				return;
 			}
