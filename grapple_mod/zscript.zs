@@ -3,6 +3,7 @@ version "4.0"
 #include "traffic.zs"
 #include "cluster.zs"
 #include "leap.zs"
+#include "skid.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a
@@ -96,6 +97,10 @@ class GrapplePlayer : DoomPlayer
 		Player.ForwardMove 0, 0;
 		Player.SideMove 0, 0;
 		Speed 0;
+		// The Skid Cannon replaces the pistol (no ammo needed).
+		Player.StartItem "SkidCannon";
+		Player.StartItem "Fist";
+		Player.WeaponSlot 2, "SkidCannon";
 	}
 
 	override void Tick()

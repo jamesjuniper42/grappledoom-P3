@@ -31,6 +31,10 @@ LEAPER  a mancubus (speedway only) that leaps 5 m high and 10 m forward at you w
 INVINCIBILITY  open the console (~) and type  invincible  to toggle it on and off.
           (The built-in  god  command does the same thing.)
 
+SKID CANNON  the starting weapon (replaces the pistol). Fires plasma-style bolts at the
+          plasma rifle's rate. A bolt that hits the floor slides along it in the direction it
+          was fired until it hits a wall or an enemy.
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook
