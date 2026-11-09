@@ -11,7 +11,7 @@ map GRAPPLE1 "Grapple Yard"
 
 map GRAPPLE2 "Grapple Speedway"
 {
-	next = "GRAPPLE2"
+	next = "GRAPPLE1"
 	sky1 = "SKY1"
 }
 

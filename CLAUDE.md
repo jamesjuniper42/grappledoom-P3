@@ -80,6 +80,12 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - Player impacts (`GrapplePlayer.CheckCarHits` / `CarHit`): each car has an oriented impact box (half length 64, half width 32). If the player meets the car's FRONT (head-on): damage up to 35, launch up at 14 units/tic, and carry some of the car's velocity. Otherwise (rear-end or side): the player takes on the car's velocity, which breaks their momentum. 12-tic cooldown. The player pulling toward a car hooks it like any enemy.
 - Lane math was checked with an independent Python port: lane positions match the road, headings match direction of travel in all four lanes.
 
+## Speedway goal: blue key, locked door, exit
+- Blue keycard (DoomEdNum 5) at (0, 0), the middle of the infield, so the player must hook over the wall to get it.
+- Exit room in the top-left outside corner (x -6268..-5564, y 2532..3268, floor 64, ceiling 224), walled by one-sided lines with a gap of void around it. Its only entrance is a 5 m wide door in the east wall: `Door_LockedRaise` (special 13, tag 0 = back sector, speed 16, delay 105, `arg3 = 2` = blue keycard per LOCKDEFS), texture `DOORBLU`, use-activated and repeatable. The hook opens it the same way as other doors (`Line.Activate`), so it needs the key too.
+- Exit switch (`SW1EXIT`, `Exit_Normal` special 243) on the room's west wall. GRAPPLE2's MAPINFO `next` is now GRAPPLE1 (it was GRAPPLE2 itself); medikit inside the room.
+- Unconfirmed in-game: that a hook-activated locked door checks the player's keys, the lock number 2 = blue, and the exit leading to GRAPPLE1.
+
 ## Cluster Demon (`cluster.zs`)
 - `ClusterDemon : Cacodemon` (uses the IWAD's cacodemon sprites, so Freedoom's under Freedoom). DoomEdNum 30002; placed in both maps.
 - Speed: 45.3 units/tic (3x run) beyond 640 units (20 m) from its target, 7.55 (0.5x) inside; `UpdateChaseSpeed()` eases by `SPEED_STEP` 3 per tic. See state is 1-tic frames so `A_Chase` Speed = units per tic.

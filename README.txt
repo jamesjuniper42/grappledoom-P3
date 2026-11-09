@@ -40,6 +40,10 @@ RAM CAR  (speedway) a dark car with two imps on the roof that tries to run you o
           up when it hits a wall. Shoot the imps; the car itself is armored. Kill both and the
           car swerves off and explodes.
 
+SPEEDWAY GOAL  grab the blue keycard in the middle of the infield (hook over the wall), then
+          open the blue door of the exit room in the top-left corner outside the loop and press
+          the exit switch inside.
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook

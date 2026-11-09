@@ -407,11 +407,31 @@ def build_map2():
         pyl = m.S(448, 1024, ftex="FLAT23", wall="SUPPORT2", **OUT)
         m.box(pyl, px - 64, py - 64, px + 64, py + 64, parent)
 
+    # Exit room (top-left outside corner): reachable only through a door that needs the
+    # blue keycard. The exit switch is on the room's west wall. The room has real
+    # one-sided walls (a gap of void around it), so the door is the only way in.
+    room = m.S(64, 224, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    door = m.S(64, 64, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK")
+    m.poly(room, [(-6268, 2532), (-6268, 2820), (-6268, 2980), (-6268, 3268),
+                  (-5564, 3268), (-5564, 2980), (-5564, 2820), (-5564, 2532)])
+    m.poly(door, [(-5564, 2820), (-5564, 2980), (-5500, 2980), (-5500, 2820)])
+    m.rev(outside, [(-6300, 2500), (-6300, 3300), (-5500, 3300),
+                    (-5500, 2980), (-5500, 2820), (-5500, 2500)])
+    door_line = ((-5500, 2820), (-5500, 2980))
+    m.specials[door_line] = dict(special=13, arg0=0, arg1=16, arg2=105, arg3=2,   # Door_LockedRaise, lock 2 = blue card
+                                 playeruse=True, repeatspecial=True, dontpegtop=True)
+    m.override[door_line] = dict(texturetop="DOORBLU")
+    exit_line = ((-6268, 2820), (-6268, 2980))
+    m.specials[exit_line] = dict(special=243, arg0=0, playeruse=True)            # Exit_Normal
+    m.override[exit_line] = dict(texturemiddle="SW1EXIT")
+
     m.things = [
         (0, int(-(TRK_R + 64)), 0, 1),                          # player start, lane +64
         (260, int(-(TRK_R + 64)), 0, 2001), (300, int(-(TRK_R + 64)), 0, 2008),
         (340, int(-(TRK_R + 64)), 0, 2012),                     # shotgun, shells, medikit on the road
         (0, 0, 0, 30001, {"arg0": 12}),                         # traffic spawner: 12 cars per lane
+        (0, 0, 0, 5),                                           # blue keycard, center of the infield (hook over the wall)
+        (-5900, 2900, 0, 2012),                                 # medikit in the exit room
         (500, 0, 0, 2012), (0, 500, 0, 2018), (0, -500, 0, 2008),   # infield goodies (hook over the wall)
         (2000, 0, 0, 2012), (-2000, 0, 0, 2008),
         (600, 3000, 0, 2019), (-3000, -3000, 0, 2012),          # outside the loop
