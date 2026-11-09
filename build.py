@@ -85,7 +85,7 @@ CAR_W, CAR_H = 320, 120
 CAR_ORIGIN = (160, 104)      # pixel that sits on the ground under the car's center
 PX_PER_UNIT = 2
 SS = 4                       # supersampling for smooth edges
-CAR_COLORS = {"R": (205, 38, 38), "B": (46, 92, 210), "Y": (225, 190, 40), "G": (48, 165, 70)}
+CAR_COLORS = {"R": (205, 38, 38), "B": (46, 92, 210), "Y": (225, 190, 40), "G": (48, 165, 70), "K": (52, 52, 64)}
 GLASS = (28, 36, 48)
 RUBBER = (18, 18, 20)
 
@@ -417,6 +417,7 @@ def build_map2():
         (600, 3000, 0, 2019), (-3000, -3000, 0, 2012),          # outside the loop
         (1500, 800, 0, 30002), (-1500, -800, 0, 30002), (0, 3200, 0, 30002),   # cluster demons
         (3000, 800, 180, 30003), (-2500, -800, 0, 30003),   # leaper mancubi
+        (-1800, 2400, 0, 30004), (1800, 2400, 180, 30004), (5350, 100, 90, 30004),   # ram cars
     ]
     return m
 

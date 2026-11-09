@@ -35,6 +35,11 @@ SKID CANNON  the starting weapon (replaces the pistol). Fires plasma-style bolts
           plasma rifle's rate. A bolt that hits the floor slides along it in the direction it
           was fired until it hits a wall or an enemy.
 
+RAM CAR  (speedway) a dark car with two imps on the roof that tries to run you over. It cannot
+          turn well at speed, so dodge it and it swings out wide before the next run. It backs
+          up when it hits a wall. Shoot the imps; the car itself is armored. Kill both and the
+          car swerves off and explodes.
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook

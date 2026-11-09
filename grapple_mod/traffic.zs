@@ -125,6 +125,7 @@ class TrafficCar : Actor
 	double cruise;              // preferred speed
 	vector2 cvel;               // world velocity this tic, used for impacts
 	bool careening;
+	bool selfDriven;            // true for subclasses that drive themselves (RamCar)
 	int careenTics;
 	double gapAhead;
 
@@ -163,6 +164,12 @@ class TrafficCar : Actor
 	override void Tick()
 	{
 		if (health <= 0)
+		{
+			Super.Tick();
+			return;
+		}
+
+		if (selfDriven)
 		{
 			Super.Tick();
 			return;
