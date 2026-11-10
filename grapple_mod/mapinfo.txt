@@ -1,0 +1,24 @@
+gameinfo
+{
+	PlayerClasses = "GrapplePlayer"
+}
+
+map GRAPPLE1 "Grapple Yard"
+{
+	next = "GRAPPLE1"
+	sky1 = "SKY1"
+}
+
+map GRAPPLE2 "Grapple Speedway"
+{
+	next = "GRAPPLE1"
+	sky1 = "SKY1"
+}
+
+DoomEdNums
+{
+	30001 = TrafficSpawner
+	30002 = ClusterDemon
+	30003 = LeapMancubus
+	30004 = RamCar
+}

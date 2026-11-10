@@ -1,0 +1,4 @@
+DefaultBind mouse2 "+altattack"
+
+// Console command "invincible" toggles invincibility (same as the built-in god cheat).
+Alias invincible "god"
