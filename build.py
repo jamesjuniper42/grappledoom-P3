@@ -369,8 +369,8 @@ def stadium(off, n=ARC_STEPS):
     return pts
 
 
-def build_map2():
-    m = Map()
+def stadium_world(m):
+    """The ring road, infield, outside and world boundary shared by GRAPPLE2 and GRAPPLE3."""
     sky = "F_SKY1"
     OUT = dict(ctex=sky, light=224)
     outside = m.S(64, 1024, ftex="FLOOR5_3", wall="STONE2", **OUT)
@@ -394,7 +394,10 @@ def build_map2():
     # World boundary: one-sided walls, outside sector on the inside.
     m.poly(outside, [(-OUTER_X, -OUTER_Y), (-OUTER_X, OUTER_Y),
                      (OUTER_X, OUTER_Y), (OUTER_X, -OUTER_Y)])
+    return outside, infield, OUT
 
+
+def add_pylons(m, outside, infield, OUT):
     # Pylons: tall columns that give the hook something to grab above wall height.
     # Each rises from the infield or outside floor (64) to 448 (top is 12 m up).
     pylons = []
@@ -407,23 +410,36 @@ def build_map2():
         pyl = m.S(448, 1024, ftex="FLAT23", wall="SUPPORT2", **OUT)
         m.box(pyl, px - 64, py - 64, px + 64, py + 64, parent)
 
-    # Exit room (top-left outside corner): reachable only through a door that needs the
-    # blue keycard. The exit switch is on the room's west wall. The room has real
-    # one-sided walls (a gap of void around it), so the door is the only way in.
+
+def add_exit_room(m, outside, locked):
+    """Exit room in the top-left outside corner. One-sided walls all round (a gap of void),
+    so the door is the only way in. locked=True: a blue-keycard door (GRAPPLE2).
+    locked=False: a closed door with sector tag 10 that the wave director opens (GRAPPLE3)."""
     room = m.S(64, 224, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
-    door = m.S(64, 64, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK")
+    door = m.S(64, 64, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK", tag=0 if locked else 10)
     m.poly(room, [(-6268, 2532), (-6268, 2820), (-6268, 2980), (-6268, 3268),
                   (-5564, 3268), (-5564, 2980), (-5564, 2820), (-5564, 2532)])
     m.poly(door, [(-5564, 2820), (-5564, 2980), (-5500, 2980), (-5500, 2820)])
     m.rev(outside, [(-6300, 2500), (-6300, 3300), (-5500, 3300),
                     (-5500, 2980), (-5500, 2820), (-5500, 2500)])
     door_line = ((-5500, 2820), (-5500, 2980))
-    m.specials[door_line] = dict(special=13, arg0=0, arg1=16, arg2=105, arg3=2,   # Door_LockedRaise, lock 2 = blue card
-                                 playeruse=True, repeatspecial=True, dontpegtop=True)
-    m.override[door_line] = dict(texturetop="DOORBLU")
+    if locked:
+        m.specials[door_line] = dict(special=13, arg0=0, arg1=16, arg2=105, arg3=2,   # Door_LockedRaise, lock 2 = blue card
+                                     playeruse=True, repeatspecial=True, dontpegtop=True)
+        m.override[door_line] = dict(texturetop="DOORBLU")
+    else:
+        m.specials[door_line] = dict(dontpegtop=True)
+        m.override[door_line] = dict(texturetop="BIGDOOR2")
     exit_line = ((-6268, 2820), (-6268, 2980))
     m.specials[exit_line] = dict(special=243, arg0=0, playeruse=True)            # Exit_Normal
     m.override[exit_line] = dict(texturemiddle="SW1EXIT")
+
+
+def build_map2():
+    m = Map()
+    outside, infield, OUT = stadium_world(m)
+    add_pylons(m, outside, infield, OUT)
+    add_exit_room(m, outside, True)
 
     m.things = [
         (0, int(-(TRK_R + 64)), 0, 1),                          # player start, lane +64
@@ -439,6 +455,118 @@ def build_map2():
         (3000, 800, 180, 30003), (-2500, -800, 0, 30003),   # leaper mancubi
         (-1800, 2400, 0, 30004), (1800, 2400, 180, 30004), (5350, 100, 90, 30004),   # ram cars
     ]
+    return m
+
+
+# --------------------------------------------------------------------------
+# GRAPPLE3: the town. The same ring road as the speedway, with a town of buildings in the
+# infield, beacon towers at the five wave zones, and an exit room that opens after wave 5.
+# --------------------------------------------------------------------------
+def add_building(m, parent, x, y, W, Dp, H, facade):
+    """A walk-in building: a solid block (roof at height H, reachable by hooking its wall
+    near the top) with a hollow room inside and a doorway in the south wall."""
+    T = 64
+    cx = x + W // 2
+    dx1, dx2 = cx - 48, cx + 48
+    OUT = dict(ctex="F_SKY1", light=224)
+    I = m.S(64, 224, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    D = m.S(64, 160, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+
+    def R():
+        return m.S(H, 1024, ftex="FLAT1", wall=facade, **OUT)
+
+    rects = [
+        (R(), x, y, dx1, y + T), (R(), dx2, y, x + W, y + T),
+        (R(), x, y + T, x + T, y + Dp), (R(), x + W - T, y + T, x + W, y + Dp),
+        (R(), x + T, y + Dp - T, x + W - T, y + Dp),
+        (I, x + T, y + T, x + W - T, y + Dp - T), (D, dx1, y, dx2, y + T),
+    ]
+    verts = set()
+    for _, x1, y1, x2, y2 in rects:
+        verts.update([(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
+    verts.update([(x, y), (x, y + Dp), (x + W, y + Dp), (x + W, y)])
+
+    def with_inserts(pts):
+        out = []
+        for i, p in enumerate(pts):
+            q = pts[(i + 1) % len(pts)]
+            out.append(p)
+            between = [v for v in verts if v != p and v != q and (
+                (v[0] == p[0] == q[0] and min(p[1], q[1]) < v[1] < max(p[1], q[1])) or
+                (v[1] == p[1] == q[1] and min(p[0], q[0]) < v[0] < max(p[0], q[0])))]
+            between.sort(key=lambda v: abs(v[0] - p[0]) + abs(v[1] - p[1]))
+            out += between
+        return out
+
+    # the hole in the parent first, so the parent's side of each line is the one that
+    # gets the facade texture
+    outline = with_inserts([(x, y), (x, y + Dp), (x + W, y + Dp), (x + W, y)])
+    m.rev(parent, outline)
+    for i, p in enumerate(outline):
+        q = outline[(i + 1) % len(outline)]
+        m.override[(m.k(q), m.k(p))] = dict(texturebottom=facade, texturetop=facade)
+    for sec, x1, y1, x2, y2 in rects:
+        m.poly(sec, with_inserts([(x1, y1), (x1, y2), (x2, y2), (x2, y1)]))
+    return (x + W // 2, y + Dp // 2)
+
+
+def build_map3():
+    m = Map()
+    outside, infield, OUT = stadium_world(m)
+    add_pylons(m, outside, infield, OUT)
+    add_exit_room(m, outside, False)
+
+    # Town: eight buildings in three rows. Items sit in the middle of each room.
+    W, DP, H = 512, 384, 352
+    facades = ["BROWN1", "BRICK7", "STARGR2", "COMPSTA1"]
+    spots = [(-2700, -1400), (-900, -1400), (900, -1400),
+             (-1800, -200), (0, -200), (1800, -200),
+             (-900, 1000), (900, 1000)]
+    loot = [
+        [2001, 2008],          # shotgun, shells
+        [2011, 2048],          # stimpack, box of bullets
+        [2012, 2007],          # medikit, clip
+        [2018, 2012],          # armor, medikit
+        [2002, 2007],          # chaingun, clip
+        [2012, 2049],          # medikit, box of shells
+        [2013],                # soulsphere
+        [2011, 2011, 2048],    # stimpacks, box of bullets
+    ]
+    items = []
+    for i, (bx, by) in enumerate(spots):
+        mx, my = add_building(m, infield, bx, by, W, DP, H, facades[i % len(facades)])
+        for k, typ in enumerate(loot[i]):
+            items.append((mx - 40 + 60 * k, my, 0, typ))
+
+    # Beacon towers mark the five wave zones (bright, tall, easy to see from the road).
+    beacons = [(1, 1800, -3000, infield), (2, 5900, 0, infield), (3, 1200, 600, infield),
+               (4, 625, 3000, infield), (5, -5900, 1000, infield)]
+    things = []
+    for n, bx, by, _ in beacons:
+        parent = infield if n == 3 else outside
+        bs = m.S(448, 1024, light=255, ftex="FLAT23", wall="SUPPORT2", ctex="F_SKY1")
+        m.box(bs, bx - 64, by - 64, bx + 64, by + 64, parent)
+        things.append((bx, by, 0, 30007, {"arg0": n, "arg1": 1100}))
+
+    # Enemy spawn markers: (wave, kind 0 = Cluster Demon / 1 = Ram Car, x, y, facing)
+    marks = [
+        (1, 0, 900, -3000, 90), (1, 0, 1800, -3300, 90), (1, 0, 2700, -3000, 90),
+        (2, 1, 5300, 600, 270), (2, 0, 5900, 900, 180), (2, 0, 5900, -900, 180),
+        (3, 0, 600, 650, 0), (3, 0, 1200, 550, 0), (3, 0, 1500, 700, 0), (3, 0, 2100, 600, 0), (3, 0, 0, 700, 0),
+        (4, 1, -600, 2400, 0), (4, 1, 900, 2300, 180),
+        (4, 0, 0, 3300, 270), (4, 0, 1250, 3300, 270), (4, 0, -1250, 3300, 270),
+        (5, 1, -5300, 300, 90), (5, 1, -4900, 1500, 270),
+        (5, 0, -5900, 300, 0), (5, 0, -5900, 1700, 0), (5, 0, -6200, 1000, 0),
+        (5, 0, -5600, 2000, 0), (5, 0, -6100, 2300, 0), (5, 0, -5700, -300, 0),
+    ]
+    for wave, kind, mx, my, ang in marks:
+        things.append((mx, my, ang, 30006, {"arg0": wave, "arg1": kind}))
+
+    m.things = [
+        (0, int(-(TRK_R + 64)), 0, 1),                          # player start, lane +64
+        (0, 600, 0, 30001, {"arg0": 12}),                       # traffic spawner: 12 cars per lane
+        (-1250, 900, 0, 30005),                                 # wave director
+    ] + items + things
     return m
 
 
@@ -487,6 +615,7 @@ if __name__ == "__main__":
     make_car_sprites()
     write_map("GRAPPLE1", "grapple1.wad", build_map1())
     write_map("GRAPPLE2", "grapple2.wad", build_map2())
+    write_map("GRAPPLE3", "grapple3.wad", build_map3())
 
     with zipfile.ZipFile("GrappleMod.pk3", "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(SRC):

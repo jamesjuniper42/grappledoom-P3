@@ -5,6 +5,7 @@ version "4.0"
 #include "leap.zs"
 #include "skid.zs"
 #include "ram.zs"
+#include "wave.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a

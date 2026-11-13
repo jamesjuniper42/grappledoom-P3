@@ -22,6 +22,8 @@ class ClusterDemon : Cacodemon
 	{
 		Tag "Cluster Demon";
 		Speed 45.3;
+		DropItem "Stimpack", 110;
+		DropItem "Shell", 90;
 	}
 
 	States

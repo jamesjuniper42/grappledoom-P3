@@ -15,10 +15,19 @@ map GRAPPLE2 "Grapple Speedway"
 	sky1 = "SKY1"
 }
 
+map GRAPPLE3 "Grapple Town"
+{
+	next = "GRAPPLE1"
+	sky1 = "SKY1"
+}
+
 DoomEdNums
 {
 	30001 = TrafficSpawner
 	30002 = ClusterDemon
 	30003 = LeapMancubus
 	30004 = RamCar
+	30005 = WaveDirector
+	30006 = WaveSpawn
+	30007 = WaveTrigger
 }

@@ -37,6 +37,7 @@ class RamCar : TrafficCar
 	int commit;                  // committed turn direction when the target is behind us
 	int blockedRecently;         // counts quick repeat collisions so it backs up longer
 	int sinceBlock;
+	bool exploded;               // set when the car blows up (used by the wave director)
 
 	Default
 	{
@@ -258,6 +259,7 @@ class RamCar : TrafficCar
 
 	void Explode()
 	{
+		exploded = true;
 		if (RiderAlive(riderFront)) riderFront.Die(null, null);
 		if (RiderAlive(riderBack)) riderBack.Die(null, null);
 		bInvulnerable = false;
@@ -290,6 +292,8 @@ class RamImp : Actor
 		+SHOOTABLE
 		+NOGRAVITY
 		+NODAMAGETHRUST
+		DropItem "Clip", 120;
+		DropItem "Stimpack", 70;
 	}
 
 	States

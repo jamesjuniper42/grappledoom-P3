@@ -44,6 +44,11 @@ SPEEDWAY GOAL  grab the blue keycard in the middle of the infield (hook over the
           open the blue door of the exit room in the top-left corner outside the loop and press
           the exit switch inside.
 
+GRAPPLE3  the town (run_town.bat): survive 5 waves. Reach each bright beacon tower in order
+          (the on-screen message says where); enemies appear when you get there. Cacodemons and
+          ram cars; enemies drop health and ammo. After wave 5 the exit door in the north-west
+          corner opens.
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook
