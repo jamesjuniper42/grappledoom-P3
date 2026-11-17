@@ -90,7 +90,7 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - `ClusterDemon : Cacodemon` (uses the IWAD's cacodemon sprites, so Freedoom's under Freedoom). DoomEdNum 30002; placed in both maps.
 - Speed: 45.3 units/tic (3x run) beyond 640 units (20 m) from its target, 7.55 (0.5x) inside; `UpdateChaseSpeed()` eases by `SPEED_STEP` 3 per tic. See state is 1-tic frames so `A_Chase` Speed = units per tic.
 - Fire rate about 2x: Missile windup 9 tics (Cacodemon 15) plus attack check every tic.
-- `ClusterBall`: projectile, on Death explodes `A_Explode(70, 128, 0, false, 32)` (rocket-sized, does not hurt the shooter), then `SpawnBurst()` throws 3 `ClusterBomblet`s forward of the shot's angle: +-30 degrees, speed 7-13, Vz 6-11, Gravity 0.7. Bomblets share the Death state (explode on impact) and do not burst again.
+- `ClusterBall`: projectile, on Death explodes `A_Explode(7, 128, 0, false, 32)` (rocket-sized, does not hurt the shooter), then `SpawnBurst()` throws 3 `ClusterBomblet`s forward of the shot's angle: +-30 degrees, speed 7-13, Vz 6-11, Gravity 0.7. Bomblets share the Death state (explode on impact) and do not burst again.
 - Unconfirmed in-game: Cacodemon subclassing and 1-tic See frames, `A_SpawnProjectile`, `virtual SpawnBurst` override, `-NOGRAVITY` in Default, `Projectile;` plus Gravity, DoomEdNum 30002. All balance numbers are guesses.
 
 ## Leaper (`leap.zs`)

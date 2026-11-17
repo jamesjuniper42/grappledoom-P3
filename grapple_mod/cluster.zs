@@ -68,7 +68,7 @@ class ClusterDemon : Cacodemon
 // ---------------------------------------------------------------------------
 class ClusterBall : Actor
 {
-	const BLAST_DAMAGE = 10;    // at the center; falls off with distance
+	const BLAST_DAMAGE = 7;     // at the center; falls off with distance
 	const BLAST_RADIUS = 128;   // same splash radius as a rocket
 	const BURST_COUNT = 3;
 
@@ -77,7 +77,7 @@ class ClusterBall : Actor
 		Radius 6;
 		Height 8;
 		Speed 14;
-		Damage 4;
+		Damage (max(1, random(1, 8) * 4 / 10));
 		Projectile;
 		SeeSound "caco/attack";
 		DeathSound "weapons/rocklx";
@@ -129,7 +129,7 @@ class ClusterBomblet : ClusterBall
 	{
 		Radius 5;
 		Height 6;
-		Damage 3;
+		Damage (max(1, random(1, 8) * 3 / 10));
 		Gravity 0.7;
 		Scale 0.8;
 		-NOGRAVITY
