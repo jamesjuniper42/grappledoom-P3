@@ -16,6 +16,139 @@ class TrackGeom
 	const TRK_LANE3 = -192.0;
 	const LANES = 4;
 
+	// GRAPPLE4 (the city) uses rounded-rectangle loops instead of the stadium:
+	// lanes 0-3 circle the four blocks counter-clockwise (so two neighbouring blocks
+	// make a two-way street), lane 4 is the outer ring road, clockwise. These match
+	// build_map4 in build.py.
+	const CITY_LANES = 5;
+	const CITY_BLOCK_C = 704.0;     // block centers are at (+-704, +-704)
+	const CITY_HALF = 512.0;        // half the side of a block
+	const CITY_LANE_R = 96.0;       // lane distance from the block wall
+	const CITY_RING_HALF = 1216.0;  // half the side of the whole block area
+	const CITY_RING_R = 288.0;
+
+	static bool IsCity()
+	{
+		return level.MapName ~== "GRAPPLE4";
+	}
+
+	static int LaneCount()
+	{
+		return IsCity() ? CITY_LANES : LANES;
+	}
+
+	static void CityDef(int lane, out double cx, out double cy, out double half, out double r)
+	{
+		half = CITY_HALF;
+		r = CITY_LANE_R;
+		switch (lane)
+		{
+		case 0: cx = -CITY_BLOCK_C; cy = -CITY_BLOCK_C; break;
+		case 1: cx = CITY_BLOCK_C; cy = -CITY_BLOCK_C; break;
+		case 2: cx = CITY_BLOCK_C; cy = CITY_BLOCK_C; break;
+		case 3: cx = -CITY_BLOCK_C; cy = CITY_BLOCK_C; break;
+		default:
+			cx = 0;
+			cy = 0;
+			half = CITY_RING_HALF;
+			r = CITY_RING_R;
+			break;
+		}
+	}
+
+	static double CityLength(int lane)
+	{
+		double cx = 0;
+		double cy = 0;
+		double half = 0;
+		double r = 0;
+		CityDef(lane, cx, cy, half, r);
+		return 8 * half + 2 * TRK_PI * r;
+	}
+
+	// Counter-clockwise rounded square around the block (cx, cy, half-size `half`) at distance
+	// r from its walls, s units from the start of the south side (heading east).
+	static void CityPoseCCW(double s, double cx, double cy, double half, double r, out double x, out double y, out double hdg)
+	{
+		double side = 2 * half;
+		double arc = TRK_PI * 0.5 * r;
+		double total = 4 * side + 4 * arc;
+		while (s >= total) s -= total;
+		while (s < 0) s += total;
+
+		double deg = 180.0 / TRK_PI;
+		if (s < side)                                   // south side, heading east
+		{
+			x = cx - half + s;
+			y = cy - half - r;
+			hdg = 0;
+		}
+		else if (s < side + arc)                        // south-east corner
+		{
+			double a = -90.0 + (s - side) / r * deg;
+			x = cx + half + r * cos(a);
+			y = cy - half + r * sin(a);
+			hdg = a + 90.0;
+		}
+		else if (s < 2 * side + arc)                    // east side, heading north
+		{
+			x = cx + half + r;
+			y = cy - half + (s - side - arc);
+			hdg = 90.0;
+		}
+		else if (s < 2 * side + 2 * arc)                // north-east corner
+		{
+			double a = (s - 2 * side - arc) / r * deg;
+			x = cx + half + r * cos(a);
+			y = cy + half + r * sin(a);
+			hdg = a + 90.0;
+		}
+		else if (s < 3 * side + 2 * arc)                // north side, heading west
+		{
+			x = cx + half - (s - 2 * side - 2 * arc);
+			y = cy + half + r;
+			hdg = 180.0;
+		}
+		else if (s < 3 * side + 3 * arc)                // north-west corner
+		{
+			double a = 90.0 + (s - 3 * side - 2 * arc) / r * deg;
+			x = cx - half + r * cos(a);
+			y = cy + half + r * sin(a);
+			hdg = a + 90.0;
+		}
+		else if (s < 4 * side + 3 * arc)                // west side, heading south
+		{
+			x = cx - half - r;
+			y = cy + half - (s - 3 * side - 3 * arc);
+			hdg = 270.0;
+		}
+		else                                            // south-west corner
+		{
+			double a = 180.0 + (s - 4 * side - 3 * arc) / r * deg;
+			x = cx - half + r * cos(a);
+			y = cy - half + r * sin(a);
+			hdg = a + 90.0;
+		}
+	}
+
+	static void CityPose(int lane, double d, out double x, out double y, out double hdg)
+	{
+		double cx = 0;
+		double cy = 0;
+		double half = 0;
+		double r = 0;
+		CityDef(lane, cx, cy, half, r);
+		if (lane == 4)
+		{
+			CityPoseCCW(CityLength(lane) - d, cx, cy, half, r, x, y, hdg);
+			hdg += 180.0;
+		}
+		else
+		{
+			CityPoseCCW(d, cx, cy, half, r, x, y, hdg);
+		}
+	}
+
 	// Lanes 0 and 1 run counter-clockwise, lanes 2 and 3 clockwise.
 	static double LaneOffset(int lane)
 	{
@@ -40,6 +173,7 @@ class TrackGeom
 
 	static double LaneLength(int lane)
 	{
+		if (IsCity()) return CityLength(lane);
 		return 2 * TRK_S + 2 * TRK_PI * LaneRadius(lane);
 	}
 
@@ -84,6 +218,11 @@ class TrackGeom
 	// Position and heading in a lane, d units along its direction of travel.
 	static void LanePose(int lane, double d, out double x, out double y, out double hdg)
 	{
+		if (IsCity())
+		{
+			CityPose(lane, d, x, y, hdg);
+			return;
+		}
 		double r = LaneRadius(lane);
 		if (LaneIsCW(lane))
 		{
@@ -362,7 +501,7 @@ class TrafficSpawner : Actor
 	{
 		Super.PostBeginPlay();
 		perLane = (args[0] > 0) ? args[0] : 12;
-		for (int l = 0; l < TrackGeom.LANES; l++)
+		for (int l = 0; l < TrackGeom.LaneCount(); l++)
 		{
 			double total = TrackGeom.LaneLength(l);
 			double spacing = total / perLane;
@@ -374,7 +513,11 @@ class TrafficSpawner : Actor
 				double h = 0;
 				TrackGeom.LanePose(l, d, x, y, h);
 				// keep the area around the player start clear
-				if (abs(x) < 700 && abs(y + TrackGeom.TRK_R) < 400) continue;
+				if (TrackGeom.IsCity())
+				{
+					if (abs(x) < 400 && abs(y + 900) < 600) continue;
+				}
+				else if (abs(x) < 700 && abs(y + TrackGeom.TRK_R) < 400) continue;
 				SpawnCar(l, d);
 			}
 		}
@@ -390,7 +533,7 @@ class TrafficSpawner : Actor
 		{
 			if (!cars[i] || cars[i].health <= 0) cars.Delete(i);
 		}
-		for (int l = 0; l < TrackGeom.LANES; l++)
+		for (int l = 0; l < TrackGeom.LaneCount(); l++)
 		{
 			int n = 0;
 			for (int j = 0; j < cars.Size(); j++)

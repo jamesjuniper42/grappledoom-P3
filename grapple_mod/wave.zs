@@ -52,6 +52,8 @@ class WaveDirector : Actor
 	int nextWave;                 // wave the next trigger starts; 0 = all done
 	int curWave;
 	bool waveActive;
+	bool autoMode;                // arg0 == 1: waves chain automatically, no triggers
+	int countdown;                // tics until the next wave in auto mode
 	Array<Actor> foes;
 
 	Default
@@ -70,6 +72,7 @@ class WaveDirector : Actor
 	{
 		Super.PostBeginPlay();
 		nextWave = 1;
+		autoMode = (args[0] == 1);
 	}
 
 	override void Tick()
@@ -78,11 +81,13 @@ class WaveDirector : Actor
 		timer++;
 		if (timer == 70)
 		{
-			Announce("SURVIVE 5 WAVES. Head for the bright beacon tower to start wave 1.");
+			if (autoMode) Announce("SURVIVE 5 WAVES. The first wave arrives in a few seconds.");
+			else Announce("SURVIVE 5 WAVES. Head for the bright beacon tower to start wave 1.");
 		}
 		if (nextWave > 0 && !waveActive)
 		{
-			CheckTrigger();
+			if (autoMode) AutoStart();
+			else CheckTrigger();
 		}
 		else if (waveActive && (timer % 10) == 0)
 		{
@@ -113,6 +118,17 @@ class WaveDirector : Actor
 			}
 		}
 		return best;
+	}
+
+	// Auto mode: count down, then start the next wave.
+	void AutoStart()
+	{
+		if (countdown <= 0) countdown = (nextWave == 1) ? 175 : 105;
+		countdown--;
+		if (countdown <= 0)
+		{
+			StartWave(nextWave);
+		}
 	}
 
 	void CheckTrigger()
@@ -195,11 +211,16 @@ class WaveDirector : Actor
 		{
 			nextWave = 0;
 			level.ExecuteSpecial(11, null, null, false, EXIT_TAG, 16);   // Door_Open on the exit door
-			Announce("ALL WAVES CLEARED! The exit door in the north-west corner is open.");
+			Announce("ALL WAVES CLEARED! The exit door is open.");
 			return;
 		}
 
 		nextWave = curWave + 1;
+		if (autoMode)
+		{
+			Announce(String.Format("Wave %d cleared! Wave %d incoming...", curWave, nextWave));
+			return;
+		}
 		String hint = "";
 		switch (nextWave)
 		{

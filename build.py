@@ -462,29 +462,43 @@ def build_map2():
 # GRAPPLE3: the town. The same ring road as the speedway, with a town of buildings in the
 # infield, beacon towers at the five wave zones, and an exit room that opens after wave 5.
 # --------------------------------------------------------------------------
-def add_building(m, parent, x, y, W, Dp, H, facade):
+def add_building(m, parent, x, y, W, Dp, H, facade, rot=0, fl=64, doorhalf=48):
     """A walk-in building: a solid block (roof at height H, reachable by hooking its wall
-    near the top) with a hollow room inside and a doorway in the south wall."""
+    near the top) with a hollow room inside and a doorway. rot = 0..3 turns the doorway
+    from the south wall counter-clockwise by 90 degrees each step. fl = the parent's floor."""
     T = 64
-    cx = x + W // 2
-    dx1, dx2 = cx - 48, cx + 48
     OUT = dict(ctex="F_SKY1", light=224)
-    I = m.S(64, 224, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
-    D = m.S(64, 160, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    I = m.S(fl, fl + 160, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    D = m.S(fl, fl + 96, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    cu, cv = W / 2.0, Dp / 2.0
+
+    def tr(u, v):
+        du, dv = u - cu, v - cv
+        for _ in range(rot % 4):
+            du, dv = -dv, du
+        return (int(round(x + cu + du)), int(round(y + cv + dv)))
+
+    def rect(u1, v1, u2, v2):
+        p, q = tr(u1, v1), tr(u2, v2)
+        return (min(p[0], q[0]), min(p[1], q[1]), max(p[0], q[0]), max(p[1], q[1]))
 
     def R():
         return m.S(H, 1024, ftex="FLAT1", wall=facade, **OUT)
 
-    rects = [
-        (R(), x, y, dx1, y + T), (R(), dx2, y, x + W, y + T),
-        (R(), x, y + T, x + T, y + Dp), (R(), x + W - T, y + T, x + W, y + Dp),
-        (R(), x + T, y + Dp - T, x + W - T, y + Dp),
-        (I, x + T, y + T, x + W - T, y + Dp - T), (D, dx1, y, dx2, y + T),
+    du1, du2 = W // 2 - doorhalf, W // 2 + doorhalf
+    local = [
+        (R(), 0, 0, du1, T), (R(), du2, 0, W, T),
+        (R(), 0, T, T, Dp), (R(), W - T, T, W, Dp),
+        (R(), T, Dp - T, W - T, Dp),
+        (I, T, T, W - T, Dp - T), (D, du1, 0, du2, T),
     ]
+    rects = [(sec,) + rect(u1, v1, u2, v2) for sec, u1, v1, u2, v2 in local]
+    foot = rect(0, 0, W, Dp)
     verts = set()
     for _, x1, y1, x2, y2 in rects:
         verts.update([(x1, y1), (x1, y2), (x2, y2), (x2, y1)])
-    verts.update([(x, y), (x, y + Dp), (x + W, y + Dp), (x + W, y)])
+    fx1, fy1, fx2, fy2 = foot
+    verts.update([(fx1, fy1), (fx1, fy2), (fx2, fy2), (fx2, fy1)])
 
     def with_inserts(pts):
         out = []
@@ -500,14 +514,14 @@ def add_building(m, parent, x, y, W, Dp, H, facade):
 
     # the hole in the parent first, so the parent's side of each line is the one that
     # gets the facade texture
-    outline = with_inserts([(x, y), (x, y + Dp), (x + W, y + Dp), (x + W, y)])
+    outline = with_inserts([(fx1, fy1), (fx1, fy2), (fx2, fy2), (fx2, fy1)])
     m.rev(parent, outline)
     for i, p in enumerate(outline):
         q = outline[(i + 1) % len(outline)]
         m.override[(m.k(q), m.k(p))] = dict(texturebottom=facade, texturetop=facade)
     for sec, x1, y1, x2, y2 in rects:
         m.poly(sec, with_inserts([(x1, y1), (x1, y2), (x2, y2), (x2, y1)]))
-    return (x + W // 2, y + Dp // 2)
+    return ((fx1 + fx2) // 2, (fy1 + fy2) // 2)
 
 
 def build_map3():
@@ -571,6 +585,79 @@ def build_map3():
 
 
 # --------------------------------------------------------------------------
+# GRAPPLE4: the city. A walled 3200 x 3200 grid: four 1024 x 1024 blocks of buildings
+# separated by 384-wide streets, with cars on every street (rounded-rectangle lanes in
+# traffic.zs: CITY_* constants; keep them in step with the numbers here). Waves start by
+# themselves, one after another. A closed exit room on the west wall opens after wave 5.
+# --------------------------------------------------------------------------
+CITY_HALF_WORLD = 1600
+CITY_BLOCK_C = 704
+CITY_BLOCK = 1024
+
+
+def build_map4():
+    m = Map()
+    ground = m.S(0, 1024, 224, ftex="FLAT1", ctex="F_SKY1", wall="GRAY1")
+    Wd = CITY_HALF_WORLD
+    # ground outline with a notch where the exit door sits (west wall, y -96..96)
+    m.poly(ground, [(-Wd, -Wd), (-Wd, -96), (-Wd, 96), (-Wd, Wd), (Wd, Wd), (Wd, -Wd)])
+
+    # exit door and exit room, west of the wall
+    door = m.S(0, 0, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK", tag=10)
+    room = m.S(0, 160, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    m.poly(door, [(-Wd - 64, -96), (-Wd - 64, 96), (-Wd, 96), (-Wd, -96)])
+    m.poly(room, [(-Wd - 400, -296), (-Wd - 400, -96), (-Wd - 400, 96), (-Wd - 400, 296),
+                  (-Wd - 64, 296), (-Wd - 64, 96), (-Wd - 64, -96), (-Wd - 64, -296)])
+    door_line = ((-Wd, -96), (-Wd, 96))
+    m.specials[door_line] = dict(dontpegtop=True)
+    m.override[door_line] = dict(texturetop="BIGDOOR2")
+    exit_line = ((-Wd - 400, -96), (-Wd - 400, 96))
+    m.specials[exit_line] = dict(special=243, arg0=0, playeruse=True)
+    m.override[exit_line] = dict(texturemiddle="SW1EXIT")
+
+    # four blocks: (center x, center y, door turn, roof height, facade)
+    B = CITY_BLOCK
+    blocks = [
+        (-CITY_BLOCK_C, -CITY_BLOCK_C, 1, 352, "BROWN1"),
+        (CITY_BLOCK_C, -CITY_BLOCK_C, 2, 448, "BRICK7"),
+        (CITY_BLOCK_C, CITY_BLOCK_C, 3, 512, "STARGR2"),
+        (-CITY_BLOCK_C, CITY_BLOCK_C, 0, 400, "COMPSTA1"),
+    ]
+    loot = [[2001, 2049, 2012], [2002, 2048, 2018], [2013, 2012, 2008], [2011, 2011, 2048]]
+    roof_loot = [2012, 2011, 2012, 2019]
+    items = []
+    for i, (cx, cy, rot, H, facade) in enumerate(blocks):
+        mx, my = add_building(m, ground, cx - B // 2, cy - B // 2, B, B, H, facade,
+                              rot=rot, fl=0, doorhalf=96)
+        for k, typ in enumerate(loot[i]):
+            items.append((mx - 120 + 120 * k, my, 0, typ))
+        items.append((cx - B // 2 + 32, cy + B // 2 - 32, 0, roof_loot[i]))   # on the roof
+
+    # Spawn markers: (wave, kind 0 = Cluster Demon / 1 = Ram Car, x, y, facing)
+    S1 = 1408
+    marks = [
+        (1, 0, -S1, -S1, 0), (1, 0, S1, -S1, 90), (1, 0, S1, S1, 180),
+        (2, 1, S1, 600, 270), (2, 0, -S1, 900, 0), (2, 0, 0, S1, 270),
+        (3, 0, -S1, 0, 0), (3, 0, S1, 0, 180), (3, 0, 0, -S1, 90), (3, 0, 0, S1, 270), (3, 0, 0, 0, 90),
+        (4, 1, -S1, 700, 270), (4, 1, 700, S1, 180),
+        (4, 0, -700, -S1, 90), (4, 0, 700, -S1, 90), (4, 0, S1, -300, 180),
+        (5, 1, 0, 700, 270), (5, 1, -700, 0, 0),
+        (5, 0, -S1, -S1, 0), (5, 0, S1, S1, 180), (5, 0, -S1, S1, 270),
+        (5, 0, S1, -S1, 90), (5, 0, 0, S1, 270), (5, 0, 0, -S1, 90),
+    ]
+    things = []
+    for wave, kind, mx, my, ang in marks:
+        things.append((mx, my, ang, 30006, {"arg0": wave, "arg1": kind}))
+
+    m.things = [
+        (0, -900, 90, 1),                                       # player start, south end of the center street
+        (0, 0, 0, 30001, {"arg0": 6}),                          # traffic spawner: 6 cars per lane
+        (0, 100, 0, 30005, {"arg0": 1}),                        # wave director, automatic waves
+    ] + items + things
+    return m
+
+
+# --------------------------------------------------------------------------
 # Static checks on the ZScript (there is no compiler here)
 # --------------------------------------------------------------------------
 RESERVED = set("""stop loop fail wait goto spawn see melee missile pain death xdeath raise heal crash
@@ -616,6 +703,7 @@ if __name__ == "__main__":
     write_map("GRAPPLE1", "grapple1.wad", build_map1())
     write_map("GRAPPLE2", "grapple2.wad", build_map2())
     write_map("GRAPPLE3", "grapple3.wad", build_map3())
+    write_map("GRAPPLE4", "grapple4.wad", build_map4())
 
     with zipfile.ZipFile("GrappleMod.pk3", "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(SRC):

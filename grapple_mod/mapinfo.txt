@@ -21,6 +21,12 @@ map GRAPPLE3 "Grapple Town"
 	sky1 = "SKY1"
 }
 
+map GRAPPLE4 "Grapple City"
+{
+	next = "GRAPPLE1"
+	sky1 = "SKY1"
+}
+
 DoomEdNums
 {
 	30001 = TrafficSpawner

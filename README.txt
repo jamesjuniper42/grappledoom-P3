@@ -49,6 +49,11 @@ GRAPPLE3  the town (run_town.bat): survive 5 waves. Reach each bright beacon tow
           ram cars; enemies drop health and ammo. After wave 5 the exit door in the north-west
           corner opens.
 
+GRAPPLE4  the city (run_city.bat): a walled 3x3-street grid with four building blocks and cars
+          on every street. Waves start by themselves: wave 1 after 5 s, each next wave 3 s after
+          the last enemy dies. After wave 5 the door in the west wall opens to the exit room.
+          Hook the building walls near the top to get onto roofs.
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook
