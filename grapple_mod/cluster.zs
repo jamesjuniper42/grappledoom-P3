@@ -68,7 +68,7 @@ class ClusterDemon : Cacodemon
 // ---------------------------------------------------------------------------
 class ClusterBall : Actor
 {
-	const BLAST_DAMAGE = 70;    // at the center; falls off with distance
+	const BLAST_DAMAGE = 10;    // at the center; falls off with distance
 	const BLAST_RADIUS = 128;   // same splash radius as a rocket
 	const BURST_COUNT = 3;
 
