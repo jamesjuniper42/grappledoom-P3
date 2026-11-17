@@ -72,12 +72,19 @@ class ClusterBall : Actor
 	const BLAST_RADIUS = 128;   // same splash radius as a rocket
 	const BURST_COUNT = 3;
 
+	// Direct-hit damage is a tenth of the Damage property's roll (never below 1).
+	// ZScript's Damage property must be a constant, so scale it here instead.
+	override int DoSpecialDamage(Actor victim, int dmg, Name dmgtype)
+	{
+		return max(1, dmg / 10);
+	}
+
 	Default
 	{
 		Radius 6;
 		Height 8;
 		Speed 14;
-		Damage (max(1, random(1, 8) * 4 / 10));
+		Damage 4;
 		Projectile;
 		SeeSound "caco/attack";
 		DeathSound "weapons/rocklx";
@@ -129,7 +136,7 @@ class ClusterBomblet : ClusterBall
 	{
 		Radius 5;
 		Height 6;
-		Damage (max(1, random(1, 8) * 3 / 10));
+		Damage 3;
 		Gravity 0.7;
 		Scale 0.8;
 		-NOGRAVITY
