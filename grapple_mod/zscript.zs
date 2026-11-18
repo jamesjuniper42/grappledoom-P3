@@ -257,6 +257,29 @@ class GrapplePlayer : DoomPlayer
 		}
 	}
 
+	// ---------------- co-op friendly fire ----------------
+
+	// The host decides who can hurt whom with the server cvars ff_p1..ff_p4: ff_pN holds
+	// the numbers of the players that player N can damage ("123" = players 1, 2 and 3).
+	// A player is only hurt by another player (or themselves) if the attacker's list
+	// has their number. Monsters, cars and the world are unaffected.
+	bool FriendlyFireAllowed(Actor src)
+	{
+		if (!src || !src.player || !player) return true;
+		int atk = src.PlayerNumber();
+		int vic = PlayerNumber();
+		if (atk < 0 || atk > 3) return true;
+		CVar cv = CVar.FindCVar(String.Format("ff_p%d", atk + 1));
+		if (!cv) return true;
+		return cv.GetString().IndexOf(String.Format("%d", vic + 1)) >= 0;
+	}
+
+	override int DamageMobj(Actor inflictor, Actor source, int dmg, Name mod, int flags, double ang)
+	{
+		if (!(flags & DMG_FORCED) && !FriendlyFireAllowed(source)) return 0;
+		return Super.DamageMobj(inflictor, source, dmg, mod, flags, ang);
+	}
+
 	// ---------------- traffic collisions ----------------
 
 	// Did we run into a car, or did one run into us? Cars are not solid, so we

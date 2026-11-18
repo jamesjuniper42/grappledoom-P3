@@ -2,3 +2,7 @@ DefaultBind mouse2 "+altattack"
 
 // Console command "invincible" toggles invincibility (same as the built-in god cheat).
 Alias invincible "god"
+
+// Friendly fire presets (host only): ff_off = nobody can hurt anyone else, ff_all = everyone can hurt everyone.
+Alias ff_off "ff_p1 1; ff_p2 2; ff_p3 3; ff_p4 4"
+Alias ff_all "ff_p1 1234; ff_p2 1234; ff_p3 1234; ff_p4 1234"

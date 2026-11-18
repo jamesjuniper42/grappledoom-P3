@@ -1,1 +1,8 @@
 server bool leap_debug = false;
+
+// Co-op friendly fire (host only): ff_pN = the players that player N can damage, e.g.
+// ff_p1 "123" lets player 1 hurt players 1, 2 and 3. Default: each player hurts only themselves.
+server noarchive string ff_p1 = "1";
+server noarchive string ff_p2 = "2";
+server noarchive string ff_p3 = "3";
+server noarchive string ff_p4 = "4";

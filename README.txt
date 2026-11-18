@@ -61,6 +61,8 @@ GRAPPLE5  the tutorial (run_tutorial.bat): start in a pit, hook your way out, fi
 CO-OP (2-4 players)
   Host: run_host.bat 2 GRAPPLE5   (players, map).  Join: run_join.bat <host address>.
   The host needs UDP port 5029 open. Test on one PC: run both, join 127.0.0.1.
+  Friendly fire (host console): ff_p1..ff_p4 list who each player can damage, e.g.
+  ff_p1 123 / ff_p2 13 / ff_p3 2. Presets: ff_off (default), ff_all.
   Waves get bigger with more players. Any player reaching the exit ends the level for all.
 
 HOOK, HOLD
