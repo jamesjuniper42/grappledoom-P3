@@ -51,6 +51,9 @@ class GrapplePlayer : DoomPlayer
 	const GS_IDLE  = 0;
 	const GS_PULL  = 1;
 	const GS_SLIDE = 2;
+	const GS_STUCK = 3;   // hanging on a wall, ceiling or enemy while the button is held
+
+	const AUTO_GAP = 11;  // tics between floor autofire shots (0.3 s)
 
 	// ledge assist
 	const LEDGE_REACH    = 96.0;  // ledge tops up to 3 m above the hit point get assisted
@@ -67,6 +70,10 @@ class GrapplePlayer : DoomPlayer
 
 	int mstate;          // movement state
 	int prevButtons;
+	bool autoFire;       // holding the button after a floor hook: keep firing at the floor
+	int autoGap;         // tics until the next autofire shot is allowed
+	bool stickable;      // this hook may hold us in place (wall, ceiling or enemy, no ledge climb)
+	bool stuckToActor;
 
 	// hook in flight
 	bool pending;
@@ -116,8 +123,18 @@ class GrapplePlayer : DoomPlayer
 
 		// right mouse press (edge triggered)
 		int btn = player.cmd.buttons;
-		if ((btn & BT_ALTATTACK) && !(prevButtons & BT_ALTATTACK))
+		bool held = (btn & BT_ALTATTACK) != 0;
+		if (!held) autoFire = false;
+		if (held && !(prevButtons & BT_ALTATTACK))
 		{
+			FireHook();
+		}
+		// The gap only runs while no hook is in flight and no pull is under way.
+		if (autoGap > 0 && !pending && mstate != GS_PULL) autoGap--;
+		if (held && autoFire && autoGap <= 0 && !pending
+			&& mstate != GS_PULL && mstate != GS_STUCK)
+		{
+			autoGap = AUTO_GAP;   // set first: a missed shot still waits the full gap
 			FireHook();
 		}
 		prevButtons = btn;
@@ -158,7 +175,16 @@ class GrapplePlayer : DoomPlayer
 			}
 			if (dist < arriveDist || pullTics >= MAX_PULL || stuckTics >= 3)
 			{
-				EndPull();
+				// Arrived at a wall, ceiling or enemy with the button still down: hang there.
+				if (stickable && held && !hasSecond
+					&& (dist < arriveDist || (stuckTics >= 3 && dist < 64.0)))
+				{
+					BeginStuck();
+				}
+				else
+				{
+					EndPull();
+				}
 			}
 			else
 			{
@@ -166,6 +192,31 @@ class GrapplePlayer : DoomPlayer
 				expected = min(pullSpeed, dist);
 				Vel = d * (expected / dist);
 				pullTics++;
+				DrawRope(hookPos);
+			}
+		}
+
+		if (mstate == GS_STUCK)
+		{
+			if (!held || (stuckToActor && (!hookTarget || hookTarget.health <= 0)))
+			{
+				EndPull();   // let go: leaves GS_STUCK, gravity back on, keeps any carried motion
+			}
+			else
+			{
+				if (hookTarget)
+				{
+					// ride the enemy: stay at our standoff point as it moves
+					UpdateActorTarget();
+					vector3 fd = pullTarget - pos;
+					double fl2 = fd.Length();
+					if (fl2 > MAX_SPEED) fd = fd * (MAX_SPEED / fl2);
+					Vel = fd;
+				}
+				else
+				{
+					Vel = (0, 0, 0);
+				}
 				DrawRope(hookPos);
 			}
 		}
@@ -188,6 +239,10 @@ class GrapplePlayer : DoomPlayer
 			if (moved < expected * 0.3) stuckTics++;
 			else stuckTics = 0;
 			lastDisp = disp;
+		}
+		else if (mstate == GS_STUCK)
+		{
+			lastDisp = disp;   // carried along if we let go of a moving enemy
 		}
 		else if (mstate == GS_SLIDE)
 		{
@@ -218,6 +273,7 @@ class GrapplePlayer : DoomPlayer
 		while (c = TrafficCar(it.Next()))
 		{
 			if (c.health <= 0) continue;
+			if (mstate == GS_STUCK && c == hookTarget) continue;   // we are hanging on this one
 			if (pos.z > c.pos.z + c.Height || pos.z + Height < c.pos.z) continue;
 			vector2 w = pos.xy - c.pos.xy;
 			double fx = cos(c.angle);
@@ -248,7 +304,7 @@ class GrapplePlayer : DoomPlayer
 		double closing = rel.x * toCar.x + rel.y * toCar.y;
 		if (closing < 2.0) return;                 // already moving apart
 
-		if (mstate == GS_PULL) EndPull();
+		if (mstate == GS_PULL || mstate == GS_STUCK) EndPull();
 
 		if (lx > 0)
 		{
@@ -295,7 +351,7 @@ class GrapplePlayer : DoomPlayer
 
 		// A new hook releases any pull in progress (keeping momentum), so the old
 		// target can't fight the new one while this hook is in flight.
-		if (mstate == GS_PULL) EndPull();
+		if (mstate == GS_PULL || mstate == GS_STUCK) EndPull();
 
 		hookPos = hit;
 		hookLine = t.HitLine;
@@ -304,10 +360,18 @@ class GrapplePlayer : DoomPlayer
 		if (t.HitType == TRACE_HitActor) hookTarget = t.HitActor;
 		hasSecond = false;
 		arriveDist = ARRIVE_DIST;
+		autoGap = AUTO_GAP;
 
 		// Doors and buttons: lines with a "player use" special.
 		hookIsUse = (t.HitType == TRACE_HitWall && t.HitLine
 			&& t.HitLine.special != 0 && (t.HitLine.activation & SPAC_Use));
+
+		// Hold-to-stick targets: walls, ceilings and enemies (not doors/switches, floors, ledges).
+		stickable = (hookTarget != null) || t.HitType == TRACE_HitCeiling
+			|| (t.HitType == TRACE_HitWall && !hookIsUse);
+		stuckToActor = (hookTarget != null);
+		// Holding after a floor hook keeps firing at the floor; any other hook ends that.
+		autoFire = (t.HitType == TRACE_HitFloor);
 
 		// Where should our feet end up?
 		if (hookTarget)
@@ -350,7 +414,7 @@ class GrapplePlayer : DoomPlayer
 		// Ledge assist: climbing a step or ledge face instead of hanging under its lip.
 		if (t.HitType == TRACE_HitWall && !hookIsUse)
 		{
-			TryLedgeAssist(t.HitLine, t.LineSide, hit);
+			if (TryLedgeAssist(t.HitLine, t.LineSide, hit)) stickable = false;   // climb it instead
 		}
 
 		// Remember which way the target lies, so HookArrived can tell if we slid past it
@@ -471,6 +535,15 @@ class GrapplePlayer : DoomPlayer
 		A_StartSound("weapons/sshotl", CHAN_AUTO);
 	}
 
+	void BeginStuck()
+	{
+		mstate = GS_STUCK;       // bNoGravity is already on from the pull
+		Vel = (0, 0, 0);
+		slideVel = (0, 0);
+		lastDisp = (0, 0);
+		A_StartSound("weapons/sshotl", CHAN_AUTO);
+	}
+
 	void EndPull()
 	{
 		bNoGravity = false;
@@ -492,7 +565,8 @@ class GrapplePlayer : DoomPlayer
 
 	void StopGrapple()
 	{
-		if (mstate == GS_PULL) bNoGravity = false;
+		if (mstate == GS_PULL || mstate == GS_STUCK) bNoGravity = false;
+		autoFire = false;
 		hasSecond = false;
 		hookTarget = null;
 		mstate = GS_IDLE;

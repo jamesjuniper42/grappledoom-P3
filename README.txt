@@ -54,6 +54,10 @@ GRAPPLE4  the city (run_city.bat): a walled 3x3-street grid with four building b
           the last enemy dies. After wave 5 the door in the west wall opens to the exit room.
           Hook the building walls near the top to get onto roofs.
 
+HOOK, HOLD
+  Hold right mouse after hooking a wall, ceiling or enemy to stay stuck there; release to let go.
+  Hold it after hooking the floor to keep firing at the floor (0.3 s between shots).
+
 CONTROLS
 Mouse look to aim. Right click fires the grappling hook. That is the only way
 to move. Left click shoots. Hooking a door or switch opens it. The hook

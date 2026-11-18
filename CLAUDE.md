@@ -43,13 +43,15 @@ run_town.bat             launches GRAPPLE3
 - The hook is the only way to move: no WASD, arrows, strafing or jumping.
 - After a pull, the player slides with very little friction. Max speed is clamped to 2x Doomguy's run speed.
 - Mouse-only play: left click shoots, right click hooks.
+- Hold to stick (branch 7.0a): if the button is still held when a pull reaches a wall, ceiling or enemy, the player hangs there (`GS_STUCK`, gravity off) until the button is released; on an enemy the player rides it as it moves. Releasing mid-pull or mid-flight changes nothing (the pull completes and slides, as before). Doors/switches, floors and ledge-assist climbs are not sticky.
+- Floor autofire: holding the button after a hook hits the floor re-fires automatically (`autoFire`), with a 0.3 s (`AUTO_GAP` 11 tics) gap that only counts down while no hook is in flight and no pull is under way. A hook that hits anything else ends the autofire; misses (sky) keep it going, each waiting the gap. Releasing the button clears it.
 - A floor hit well above the player's feet (for example the infield behind a wall) lifts the player straight up first, then flies to the point, so walls are cleared instead of rammed.
 - Speedway (GRAPPLE2): a huge four-lane loop under open sky with traffic; see the Speedway section.
 
 ## How GrapplePlayer works (`zscript.zs`)
 - Units: 32 map units = 1 meter, 35 tics = 1 second.
 - Tuning constants sit at the top of the class: `NEAR_RANGE` (160 = 5 m), `HOOK_SPEED` (128 units/tic) and `MIN_FLIGHT` (4 tics), `MAX_RANGE`, `MAX_SPEED` (30.2 = 2x run speed of about 15.1), `PULL_MIN`, `PULL_ACCEL`, `ARRIVE_DIST`, `MAX_PULL`, `SLIDE_GROUND_KEEP`, `SLIDE_AIR_KEEP`, `SLIDE_STOP`. Change numbers here first when the feel is off.
-- State machine (`mstate`): `GS_IDLE`, `GS_PULL`, `GS_SLIDE`.
+- State machine (`mstate`): `GS_IDLE`, `GS_PULL`, `GS_SLIDE`, `GS_STUCK` (7.0a).
   - `Tick()` detects a right-click edge from `player.cmd.buttons` (`BT_ALTATTACK`) and calls `FireHook()`.
   - `FireHook()` does a `LineTrace`, rejects open sky, treats shootable actors as anchors (`hookTarget`, re-aimed every tic by `UpdateActorTarget()`), computes `pullTarget`, sets up ledge assist with `TryLedgeAssist()`, then either arrives now or sets `pending` for a distance-based flight time.
   - `HookArrived()` either activates the line (door or switch) or calls `BeginPull()`.
@@ -61,6 +63,7 @@ run_town.bat             launches GRAPPLE3
 
 ## Things not yet confirmed in-game
 Claude wrote these from memory of the API. Suspect them first when something breaks:
+- Hold-to-stick and floor autofire (7.0a): reading `BT_ALTATTACK` held state each tic, `GS_STUCK` hanging with `Vel = 0` and gravity off, riding an enemy, autofire gap feel.
 - `Line.Activate(self, side, SPAC_Use)` as the way to trigger doors and switches.
 - Zeroing `Player.ForwardMove` / `SideMove` / `Speed` actually stops keyboard walking. (An earlier `TweakSpeeds` override failed to compile in 4.14.2 and was removed.)
 - `gameinfo { PlayerClasses = ... }` in `mapinfo.txt` registering the class.
