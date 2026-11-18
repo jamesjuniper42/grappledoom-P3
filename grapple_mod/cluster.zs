@@ -70,9 +70,16 @@ class ClusterDemon : Cacodemon
 // ---------------------------------------------------------------------------
 class ClusterBall : Actor
 {
-	const BLAST_DAMAGE = 70;    // at the center; falls off with distance
+	const BLAST_DAMAGE = 7;     // at the center; falls off with distance
 	const BLAST_RADIUS = 128;   // same splash radius as a rocket
 	const BURST_COUNT = 3;
+
+	// Direct-hit damage is a tenth of the Damage property's roll (never below 1).
+	// ZScript's Damage property must be a constant, so scale it here instead.
+	override int DoSpecialDamage(Actor victim, int dmg, Name dmgtype)
+	{
+		return max(1, dmg / 10);
+	}
 
 	Default
 	{
