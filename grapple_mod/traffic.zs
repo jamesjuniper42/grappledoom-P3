@@ -290,6 +290,10 @@ class TrafficCar : Actor
 	const BLAST_DAMAGE = 70;
 	const BLAST_RADIUS = 192;
 	const BLAST_FULL = 48;      // full damage inside this distance
+	const HONK_RANGE = 64.0;    // honk at an enemy this far (2 m) in front of the bumper
+	const HONK_FRONT = 64.0;    // bumper distance from the car's center
+	const HONK_HALF_WID = 40.0; // how far to either side of the car's path counts as "in front"
+	const HONK_COOLDOWN = 70;   // tics between honks (2 s)
 
 	TrafficSpawner mgr;
 	int lane;
@@ -301,6 +305,8 @@ class TrafficCar : Actor
 	bool selfDriven;            // true for subclasses that drive themselves (RamCar)
 	int careenTics;
 	double gapAhead;
+	int hornCool;
+	int hornTimer;
 
 	Default
 	{
@@ -309,7 +315,7 @@ class TrafficCar : Actor
 		Height 40;
 		Scale 0.5;
 		Mass 600;
-		DeathSound "world/barrelx";
+		DeathSound "car/crash";   // played by A_Scream in the Death state: every car, Ram Cars too
 		+SHOOTABLE
 		+NOBLOOD
 		+NOGRAVITY
@@ -367,6 +373,40 @@ class TrafficCar : Actor
 
 		DriveStep();
 		Super.Tick();
+		CheckHonk();
+	}
+
+	// Honk at an enemy of the player (a living monster, or a Ram Car) standing within
+	// HONK_RANGE of our front bumper and inside our path. Checked every third tic.
+	void CheckHonk()
+	{
+		if (hornCool > 0)
+		{
+			hornCool--;
+			return;
+		}
+		hornTimer++;
+		if ((hornTimer % 3) != 0) return;
+
+		double fx = cos(angle);
+		double fy = sin(angle);
+		BlockThingsIterator it = BlockThingsIterator.Create(self, HONK_FRONT + HONK_RANGE + 64.0);
+		while (it.Next())
+		{
+			Actor a = it.thing;
+			if (!a || a == self || a.health <= 0) continue;
+			if (!a.bIsMonster && !(a is "RamCar")) continue;
+			if (a.pos.z > pos.z + Height + 32 || a.pos.z + a.Height < pos.z) continue;
+			vector2 w = a.pos.xy - pos.xy;
+			double lx = w.x * fx + w.y * fy;        // along our heading: positive is ahead of us
+			double ly = -w.x * fy + w.y * fx;       // across our path
+			if (lx <= 0) continue;
+			if (lx - a.Radius > HONK_FRONT + HONK_RANGE) continue;
+			if (abs(ly) > HONK_HALF_WID + a.Radius) continue;
+			A_StartSound("car/honk", CHAN_AUTO);
+			hornCool = HONK_COOLDOWN;
+			return;
+		}
 	}
 
 	// One tic of following the lane.

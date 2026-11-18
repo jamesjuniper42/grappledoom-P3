@@ -1,0 +1,7 @@
+Sound effects used by Grapple Doom (from freesound.org, files supplied by the project owner)
+
+grapple_mod/sounds/carcrash.ogg   "crash" by cogfirestudios, Freesound sound #420356
+grapple_mod/sounds/carhonk.ogg    "car horn beep beep two beeps honk honk" by amishrob, Freesound sound #423990
+
+Both were converted from WAV to OGG. The license of each sound is set on its Freesound page;
+the project owner needs to confirm it (CC0 needs nothing; CC-BY needs this credit kept).

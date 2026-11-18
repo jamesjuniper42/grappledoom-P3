@@ -152,6 +152,12 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - Death: when both riders are dead (`phase 2`) it veers a random +-70 degrees and drives straight, exploding (`Explode()`, which also kills any rider, clears invulnerability and calls `Detonate()`) when blocked, on touching a player, or after 70 tics.
 - Unconfirmed in-game: `+INVULNERABLE` plus `Die(null, null)`, riders as non-solid shootables hit by projectiles and hitscan, `A_FaceTarget(25)` and `A_SpawnProjectile` from a rider, `SetStateLabel("Missile")` from Tick, blocked detection via displacement for non-solid actors, riders' z offsets against the sprite roof, placement coordinates, and all balance numbers.
 
+## Car sounds (7.0a)
+- Files: `grapple_mod/sounds/carhonk.ogg` and `carcrash.ogg` (converted from the user's Freesound WAVs; credits in `CREDITS-SOUNDS.txt`, license still to be confirmed by the user), registered in `grapple_mod/sndinfo.txt` as `car/honk` and `car/crash` with `$limit` and `$rolloff`.
+- Crash: `TrafficCar` `DeathSound "car/crash"`, played by `A_Scream()` in the Death state, so every neutral car and the Ram Car play it when destroyed (the old barrel-explosion sound is no longer used).
+- Honk (`TrafficCar.CheckHonk`, neutral lane-driving cars only; Ram Cars and careening cars do not honk): every 3rd tic a `BlockThingsIterator` looks for a living `bIsMonster` actor or a `RamCar` within 2 m (`HONK_RANGE` 64) of the front bumper (`HONK_FRONT` 64 from the car's center) and within `HONK_HALF_WID` 40 (+ its radius) of the car's path, overlapping in height. 2 s cooldown (`HONK_COOLDOWN` 70). Players never trigger it.
+- Unconfirmed in-game: `sndinfo.txt` being picked up from the PK3 root, `BlockThingsIterator` usage, `A_StartSound` on a non-solid car, whether 2 m is enough warning at car speeds (9-14 units/tic is about 0.3-0.4 m per tic, so a car covers 2 m in 5-7 tics, i.e. the honk is nearly simultaneous with contact for oncoming things).
+
 ## Skid Cannon (`skid.zs`)
 - Replaces the starting pistol: `Player.StartItem "SkidCannon"` / `Fist` and `Player.WeaponSlot 2` in the GrapplePlayer Default block. Uses plasma rifle sprites (PLSG/PLSF/PLSS/PLSE) and sounds; no ammo (`AmmoUse 0`).
 - Fire rate matches the plasma rifle: `PLSG A 3 FireSkid(); PLSG B 20 A_ReFire;` (one shot per 3 tics held).

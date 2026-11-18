@@ -1,0 +1,9 @@
+// Car sounds (see CREDITS-SOUNDS.txt for where they come from)
+car/honk   "sounds/carhonk.ogg"
+car/crash  "sounds/carcrash.ogg"
+
+// don't let a pile of cars honk or crash in unison at full volume
+$limit car/honk 3
+$limit car/crash 3
+$rolloff car/honk custom 64 1200
+$rolloff car/crash custom 128 2400
