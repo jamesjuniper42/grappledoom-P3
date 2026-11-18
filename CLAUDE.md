@@ -32,6 +32,7 @@ run_grapple.bat          launches GRAPPLE1
 run_speedway.bat         launches GRAPPLE2
 run_town.bat             launches GRAPPLE3
 run_tutorial.bat         launches GRAPPLE5 (tutorial; also GRAPPLE4 city has run_city.bat)
+run_host.bat / run_join.bat   co-op: host N players on a map / join a host (UDP 5029)
 ```
 - Edit `build.py` to change the map or sprite. Do not hand-edit anything in `maps/*.wad` or `sprites/*.png`; they are overwritten on every build.
 - Rebuild after any change: `python3 build.py`. It checks that every sector outline closes into a loop, that the `TRK_*` track constants in `build.py` match `traffic.zs`, and runs a small ZScript lint (balanced brackets; identifiers that are reserved words or shadow Actor members, since ZScript is case-insensitive: a variable `sTop` is the `stop` keyword). It is not a compiler.
@@ -117,6 +118,13 @@ Claude wrote these from memory of the API. Suspect them first when something bre
 - Co-op: player starts 2-4 are placed in the pit next to start 1.
 - MY choices (the brief left these open): the room 2 and room 3 doorways are open, not doors (the brief says "door" only for the first one); hallway 1 and the vestibule around the door are the same 6 m width as the doorways; MAPINFO `next` is GRAPPLE2 (the speedway); the Cluster Demon and Ram Car start asleep until they see or hear the player (the Ram Car hunts within 4000 units).
 - Unconfirmed in-game: everything (never compiled or run). Check first: door opening from both sides, the Ram Car colliding with the big pillar and walls, Imps not stuck inside pillars, cars circling at a sensible speed.
+
+## Multiplayer (co-op only, branch 7.0a)
+- Co-op for 2-4 players (GZDoom's own netplay: `-host N`, `-join ADDR`, port UDP 5029). All five maps have player starts 1-4 (types 1-4) next to each other. No deathmatch starts (type 11) exist, so deathmatch does not work.
+- All the scripts were already written per player (they loop over `players[]`/`playeringame`, cars and demons pick the nearest living player), so little needed changing. Each player has their own hook, pull, slide and stick state from their own buttons. Hooking another player works like hooking any shootable actor.
+- Wave scaling (`WaveDirector.StartWave`): each extra player adds half as many enemies again: credit of 0.5 x (players - 1) builds per marker and every whole point spawns one more enemy 96 units to the side of that marker. 2 players = +50%, 3 = double, 4 = two and a half times. Only the wave maps (GRAPPLE3, GRAPPLE4) scale; the tutorial's fixed enemies do not.
+- Exit: any player using the exit switch ends the level for everyone (GZDoom's normal co-op exit).
+- Unconfirmed (never run in netplay): that nothing desyncs (scripts only use synced calls: `random`, `frandom`, actor state; the only client-side read is `CVar.FindCVar('leap_debug')`, a server CVar), respawn after death mid-hook (the hanging state clears when the player actor is replaced), friendly fire from the Skid Cannon or blasts, wave balance.
 
 ## Cluster Demon (`cluster.zs`)
 - `ClusterDemon : Cacodemon` (uses the IWAD's cacodemon sprites, so Freedoom's under Freedoom). DoomEdNum 30002; placed in both maps.

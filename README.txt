@@ -58,6 +58,11 @@ GRAPPLE5  the tutorial (run_tutorial.bat): start in a pit, hook your way out, fi
           pillars, take the shotgun from the hallway, beat a Cluster Demon, then cross a room
           of circling cars with one hostile Ram Car to reach the exit.
 
+CO-OP (2-4 players)
+  Host: run_host.bat 2 GRAPPLE5   (players, map).  Join: run_join.bat <host address>.
+  The host needs UDP port 5029 open. Test on one PC: run both, join 127.0.0.1.
+  Waves get bigger with more players. Any player reaching the exit ends the level for all.
+
 HOOK, HOLD
   Hold right mouse after hooking a wall, ceiling or enemy to stay stuck there; release to let go.
   Hold it after hooking the floor to keep firing at the floor (0.3 s between shots).

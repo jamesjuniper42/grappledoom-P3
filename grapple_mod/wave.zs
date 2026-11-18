@@ -154,21 +154,41 @@ class WaveDirector : Actor
 		waveActive = true;
 		foes.Clear();
 
+		// Co-op: each extra player adds half as many enemies again (credit builds up per
+		// marker, and every whole point of credit is one more enemy beside that marker).
+		int players_in = 0;
+		for (int i = 0; i < MAXPLAYERS; i++)
+		{
+			if (playeringame[i]) players_in++;
+		}
+		double perMarker = 0.5 * max(0, players_in - 1);
+		double credit = 0;
+
 		ThinkerIterator it = ThinkerIterator.Create("WaveSpawn");
 		WaveSpawn s;
 		while (s = WaveSpawn(it.Next()))
 		{
 			if (s.args[0] != n) continue;
-			Actor f = SpawnFoe(s);
+			Actor f = SpawnFoe(s, 0);
 			if (f) foes.Push(f);
+			credit += perMarker;
+			int k = 1;
+			while (credit >= 1.0)
+			{
+				credit -= 1.0;
+				f = SpawnFoe(s, 96.0 * k);
+				if (f) foes.Push(f);
+				k++;
+			}
 		}
 		Announce(String.Format("WAVE %d of %d", n, LAST_WAVE));
 	}
 
-	Actor SpawnFoe(WaveSpawn s)
+	Actor SpawnFoe(WaveSpawn s, double sideOff)
 	{
 		bool isCar = (s.args[1] == 1);
 		vector3 at = s.pos;
+		at.xy += (cos(s.angle + 90.0), sin(s.angle + 90.0)) * sideOff;
 		if (!isCar) at.z += DEMON_HEIGHT;
 
 		Actor a;

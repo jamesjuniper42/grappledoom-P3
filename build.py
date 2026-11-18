@@ -334,7 +334,8 @@ def build_map1():
     m.override[sw] = dict(texturemiddle="SW1BRCOM")
 
     m.things = [
-        (128, 128, 45, 1), (200, 200, 0, 2001), (232, 200, 0, 2008), (352, 100, 0, 2012),
+        (128, 128, 45, 1), (176, 128, 45, 2), (80, 128, 45, 3), (128, 176, 45, 4),
+        (200, 200, 0, 2001), (232, 200, 0, 2008), (352, 100, 0, 2012),
         (700, 700, 225, 3004), (820, 520, 180, 3004), (300, 800, 270, 3001),
         (500, 1250, 270, 2012), (1500, 400, 180, 2008),
         (800, 800, 225, 30002), (200, 900, 270, 30002),     # cluster demons
@@ -443,6 +444,7 @@ def build_map2():
 
     m.things = [
         (0, int(-(TRK_R + 64)), 0, 1),                          # player start, lane +64
+        (60, int(-(TRK_R + 64)), 0, 2), (-60, int(-(TRK_R + 64)), 0, 3), (120, int(-(TRK_R + 64)), 0, 4),   # co-op starts
         (260, int(-(TRK_R + 64)), 0, 2001), (300, int(-(TRK_R + 64)), 0, 2008),
         (340, int(-(TRK_R + 64)), 0, 2012),                     # shotgun, shells, medikit on the road
         (0, 0, 0, 30001, {"arg0": 12}),                         # traffic spawner: 12 cars per lane
@@ -578,6 +580,7 @@ def build_map3():
 
     m.things = [
         (0, int(-(TRK_R + 64)), 0, 1),                          # player start, lane +64
+        (60, int(-(TRK_R + 64)), 0, 2), (-60, int(-(TRK_R + 64)), 0, 3), (120, int(-(TRK_R + 64)), 0, 4),   # co-op starts
         (0, 600, 0, 30001, {"arg0": 12}),                       # traffic spawner: 12 cars per lane
         (-1250, 900, 0, 30005),                                 # wave director
     ] + items + things
@@ -651,6 +654,7 @@ def build_map4():
 
     m.things = [
         (0, -900, 90, 1),                                       # player start, south end of the center street
+        (60, -900, 90, 2), (-60, -900, 90, 3), (0, -840, 90, 4),   # co-op starts
         (0, 0, 0, 30001, {"arg0": 6}),                          # traffic spawner: 6 cars per lane
         (0, 100, 0, 30005, {"arg0": 1}),                        # wave director, automatic waves
     ] + items + things
