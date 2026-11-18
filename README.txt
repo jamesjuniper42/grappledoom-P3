@@ -54,6 +54,9 @@ GRAPPLE4  the city (run_city.bat): a walled 3x3-street grid with four building b
           the last enemy dies. After wave 5 the door in the west wall opens to the exit room.
           Hook the building walls near the top to get onto roofs.
 
+START  run_game.bat opens the title screen; New Game starts in the tutorial (GRAPPLE5),
+          then continues to the speedway and the yard.
+
 GRAPPLE5  the tutorial (run_tutorial.bat): start in a pit, hook your way out, fight Imps behind
           pillars, take the shotgun from the hallway, beat a Cluster Demon, then cross a room
           of circling cars with one hostile Ram Car to reach the exit.

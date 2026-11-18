@@ -3,6 +3,15 @@ gameinfo
 	PlayerClasses = "GrapplePlayer"
 }
 
+// New Game (menu or console "newgame") starts the tutorial instead of the IWAD's MAP01.
+// Same shape as the stock Doom 2 episode; one episode means no episode menu.
+clearepisodes
+episode GRAPPLE5
+{
+	name = "Grapple Doom"
+	key = "g"
+}
+
 map GRAPPLE1 "Grapple Yard"
 {
 	next = "GRAPPLE1"

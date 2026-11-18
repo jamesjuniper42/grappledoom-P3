@@ -6,6 +6,7 @@ A GZDoom mod where the grappling hook is the only way to move. Inspired by the g
 - GZDoom 4.14.2 on Windows 11. Use the ZScript `version "4.0"` API.
 - IWAD: Freedoom Phase 2 (`freedoom2.wad`, BSD licensed) so the mod can be shared without owning Doom 2. Doom 2 also works.
 - Run: `gzdoom.exe -iwad freedoom2.wad -file GrappleMod.pk3 +map GRAPPLE1`
+- On 7.0a, New Game (menu) starts the tutorial GRAPPLE5 via a MAPINFO `clearepisodes` + `episode GRAPPLE5` block copied from the stock doom2 mapinfo shape; launch without `+map` (`run_game.bat`). Unconfirmed in-game.
 - Right mouse must be bound: `bind mouse2 +altattack` (`keyconf.txt` suggests this default).
 - Claude cannot run GZDoom here. Nothing is playtested by Claude. The workflow is: Claude edits, the user runs it and pastes the console output or describes what happened, Claude fixes it.
 
@@ -31,6 +32,7 @@ grapple_mod/
 run_grapple.bat          launches GRAPPLE1
 run_speedway.bat         launches GRAPPLE2
 run_town.bat             launches GRAPPLE3
+run_game.bat             title screen; New Game starts GRAPPLE5 (MAPINFO episode, 7.0a)
 run_tutorial.bat         launches GRAPPLE5 (tutorial; also GRAPPLE4 city has run_city.bat)
 run_host.bat / run_join.bat   co-op: host N players on a map / join a host (UDP 5029)
 ```
