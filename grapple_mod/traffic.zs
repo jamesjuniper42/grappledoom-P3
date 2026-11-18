@@ -32,9 +32,37 @@ class TrackGeom
 		return level.MapName ~== "GRAPPLE4";
 	}
 
+	// GRAPPLE5 (the tutorial): two counter-clockwise circles around the big pillar in
+	// the last room. These match build_map5 in build.py.
+	const TUT_CX = 0.0;
+	const TUT_CY = 4480.0;
+	const TUT_R0 = 560.0;
+	const TUT_R1 = 760.0;
+
+	static bool IsTutorial()
+	{
+		return level.MapName ~== "GRAPPLE5";
+	}
+
 	static int LaneCount()
 	{
+		if (IsTutorial()) return 2;
 		return IsCity() ? CITY_LANES : LANES;
+	}
+
+	static double TutRadius(int lane)
+	{
+		return (lane == 0) ? TUT_R0 : TUT_R1;
+	}
+
+	// d units along a counter-clockwise circle, starting at its east point.
+	static void TutPose(int lane, double d, out double x, out double y, out double hdg)
+	{
+		double r = TutRadius(lane);
+		double a = d / r * (180.0 / TRK_PI);
+		x = TUT_CX + r * cos(a);
+		y = TUT_CY + r * sin(a);
+		hdg = a + 90.0;
 	}
 
 	static void CityDef(int lane, out double cx, out double cy, out double half, out double r)
@@ -173,6 +201,7 @@ class TrackGeom
 
 	static double LaneLength(int lane)
 	{
+		if (IsTutorial()) return 2 * TRK_PI * TutRadius(lane);
 		if (IsCity()) return CityLength(lane);
 		return 2 * TRK_S + 2 * TRK_PI * LaneRadius(lane);
 	}
@@ -218,6 +247,11 @@ class TrackGeom
 	// Position and heading in a lane, d units along its direction of travel.
 	static void LanePose(int lane, double d, out double x, out double y, out double hdg)
 	{
+		if (IsTutorial())
+		{
+			TutPose(lane, d, x, y, hdg);
+			return;
+		}
 		if (IsCity())
 		{
 			CityPose(lane, d, x, y, hdg);

@@ -658,6 +658,97 @@ def build_map4():
 
 
 # --------------------------------------------------------------------------
+# GRAPPLE5: the tutorial. Octagonal rooms joined by short hallways, all indoors:
+#   room 1 (pit start, 8 pillars with imps) -> door -> hallway 1 (shotgun + shells)
+#   -> room 2 (one Cluster Demon) -> hallway 2 -> room 3 (big pillar, cars circling it
+#   plus one Ram Car) -> exit room. Keep TUT_* in traffic.zs in step with ROOM3 below.
+# --------------------------------------------------------------------------
+TUT_ROOM3_CY = 4480    # traffic.zs TUT_CY
+
+
+def octagon(cx, cy, a, north=0, south=0):
+    """Clockwise octagon of apothem a (flat sides facing N/E/S/W). north/south = half-width
+    of a doorway gap in that wall, whose two end vertices are added to the outline."""
+    s2 = int(round(a * 0.41421))
+    pts = [(cx - s2, cy + a)]
+    if north:
+        pts += [(cx - north, cy + a), (cx + north, cy + a)]
+    pts += [(cx + s2, cy + a), (cx + a, cy + s2), (cx + a, cy - s2), (cx + s2, cy - a)]
+    if south:
+        pts += [(cx + south, cy - a), (cx - south, cy - a)]
+    pts += [(cx - s2, cy - a), (cx - a, cy - s2), (cx - a, cy + s2)]
+    return pts
+
+
+def build_map5():
+    m = Map()
+    S, poly = m.S, m.poly
+    H = 96                      # half width of every doorway and hallway (6 m across)
+
+    # ---- room 1: 64 m across, pit in the south-west corner, 8 pillars ----
+    room1 = S(0, 576, 192, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    poly(room1, octagon(0, 0, 1024, north=H))
+    pit = S(-128, 576, 160, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    m.box(pit, -700, -700, -444, -444, room1)           # 8 m square, 4 m deep
+    pillars = S(480, 576, 192, ftex="FLAT1", ctex="CEIL3_5", wall="STARTAN3")
+    imps = []
+    for k in range(8):
+        a = math.radians(22.5 + 45 * k)                 # offset so none lands on the pit
+        px, py = int(round(640 * math.cos(a))), int(round(640 * math.sin(a)))
+        m.box(pillars, px - 64, py - 64, px + 64, py + 64, room1)
+        ix, iy = int(round(750 * math.cos(a))), int(round(750 * math.sin(a)))   # behind it
+        imps.append((ix, iy, int(math.degrees(a) + 180) % 360, 3001))
+
+    # ---- doorway: vestibule, door slab, hallway 1 ----
+    vest1 = S(0, 192, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    door = S(0, 0, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK")
+    hall1 = S(0, 192, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="COMPSTA1")
+    poly(vest1, [(-H, 1024), (-H, 1088), (H, 1088), (H, 1024)])
+    poly(door, [(-H, 1088), (-H, 1152), (H, 1152), (H, 1088)])
+    poly(hall1, [(-H, 1152), (-H, 1664), (H, 1664), (H, 1152)])
+    for edge in (((-H, 1088), (H, 1088)), ((H, 1152), (-H, 1152))):   # both faces open the door
+        m.specials[edge] = dict(special=12, arg0=0, arg1=16, arg2=105,
+                                playeruse=True, repeatspecial=True, dontpegtop=True)
+        m.override[edge] = dict(texturetop="BIGDOOR2")
+
+    # ---- room 2: 40 m across, empty ----
+    room2 = S(0, 448, 192, ftex="FLOOR4_8", ctex="CEIL3_5", wall="BROWN1")
+    poly(room2, octagon(0, 2304, 640, north=H, south=H))
+
+    hall2 = S(0, 192, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="COMPSTA1")
+    poly(hall2, [(-H, 2944), (-H, 3456), (H, 3456), (H, 2944)])
+
+    # ---- room 3: 64 m across, one big pillar ----
+    room3 = S(0, 704, 192, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARGR2")
+    poly(room3, octagon(0, TUT_ROOM3_CY, 1024, north=H, south=H))
+    bigp = S(608, 704, 192, ftex="FLAT1", ctex="CEIL3_5", wall="STARGR2")
+    oct3 = octagon(0, TUT_ROOM3_CY, 192)
+    poly(bigp, oct3)
+    m.rev(room3, oct3)
+
+    # ---- exit: vestibule and small room ----
+    vest2 = S(0, 192, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="COMPSTA1")
+    poly(vest2, [(-H, 5504), (-H, 5568), (H, 5568), (H, 5504)])
+    exitroom = S(0, 192, 192, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    poly(exitroom, [(-192, 5568), (-192, 5952), (-H, 5952), (H, 5952), (192, 5952),
+                    (192, 5568), (H, 5568), (-H, 5568)])
+    sw = ((-H, 5952), (H, 5952))
+    m.specials[sw] = dict(special=243, arg0=0, playeruse=True)          # Exit_Normal
+    m.override[sw] = dict(texturemiddle="SW1EXIT")
+
+    m.things = [
+        (-572, -572, 45, 1), (-520, -572, 45, 2), (-624, -572, 45, 3), (-572, -520, 45, 4),
+        (-32, 1408, 0, 2001), (32, 1408, 0, 2008),             # shotgun and shells, middle of hallway 1
+        (0, 2304, 270, 30002),                                  # the single Cluster Demon, room 2
+        (0, 3200, 0, 2012),                                     # medikit in hallway 2
+        (0, TUT_ROOM3_CY, 0, 30001, {"arg0": 6}),               # traffic spawner: 6 cars per circle
+        (-800, 5000, 0, 30004),                                 # the Ram Car
+        (0, 5700, 0, 2012),                                     # medikit in the exit room
+    ] + imps
+    return m
+
+
+# --------------------------------------------------------------------------
 # Static checks on the ZScript (there is no compiler here)
 # --------------------------------------------------------------------------
 RESERVED = set("""stop loop fail wait goto spawn see melee missile pain death xdeath raise heal crash
@@ -704,6 +795,7 @@ if __name__ == "__main__":
     write_map("GRAPPLE2", "grapple2.wad", build_map2())
     write_map("GRAPPLE3", "grapple3.wad", build_map3())
     write_map("GRAPPLE4", "grapple4.wad", build_map4())
+    write_map("GRAPPLE5", "grapple5.wad", build_map5())
 
     with zipfile.ZipFile("GrappleMod.pk3", "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(SRC):
