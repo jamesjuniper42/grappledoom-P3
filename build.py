@@ -178,6 +178,19 @@ def make_revive_sprite():
     open(f"{SRC}/sprites/REVXA0.png", "wb").write(png_with_grab(img, size // 2, size // 2))
 
 
+def make_spike_sprite():
+    """WRMSA0: a thin bone-colored spike (16 x 40 px) with a red tip, base at the bottom."""
+    w, h, ss = 16, 40, 4
+    img = Image.new("RGBA", (w * ss, h * ss), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(img)
+    dr.polygon([(0, h * ss), (w * ss, h * ss), (w * ss // 2, 0)], fill=(225, 215, 190, 255))
+    dr.polygon([(w * ss // 2, 0), (w * ss // 2 + w * ss // 5, h * ss * 2 // 5),
+                (w * ss // 2 - w * ss // 5, h * ss * 2 // 5)], fill=(200, 30, 30, 255))
+    dr.line([(w * ss // 2, 0), (w * ss, h * ss)], fill=(150, 140, 120, 255), width=ss)
+    img = img.resize((w, h), Image.LANCZOS)
+    open(f"{SRC}/sprites/WRMSA0.png", "wb").write(png_with_grab(img, w // 2, h))
+
+
 def make_worm_sprites():
     """WRMHA0 (head, 88 px) and WRMBA0 (body segment, 68 px): shaded spheres, one rotation,
     bottom-aligned so the sprite's middle is the actor's center."""
@@ -890,6 +903,7 @@ if __name__ == "__main__":
     make_rope_bead()
     make_car_sprites()
     make_worm_sprites()
+    make_spike_sprite()
     make_revive_sprite()
     write_map("GRAPPLE1", "grapple1.wad", build_map1())
     write_map("GRAPPLE2", "grapple2.wad", build_map2())

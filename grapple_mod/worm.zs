@@ -17,12 +17,47 @@
 // Actor positions are the BOTTOM of the actor; the worm's path is stored as the
 // CENTER of each part (position + half the height).
 // ---------------------------------------------------------------------------
+// A thin spike on top of each segment. No collision; it is only a visual and the spot the
+// segment's fireballs come out of, so they start clear of the worm's own body.
+class WormSpike : Actor
+{
+	Default
+	{
+		Radius 1;
+		Height 1;
+		+NOGRAVITY
+		+NOINTERACTION
+	}
+	States
+	{
+	Spawn:
+		WRMS A -1;
+		Stop;
+	}
+}
+
+// Fireball from a segment: the Imp fireball, but it flies through (and never hurts) the worm.
+class WormBall : DoomImpBall
+{
+	Default
+	{
+		Species "WormPart";
+		+THRUSPECIES
+		+DONTHARMSPECIES
+	}
+}
+
 class WormSegment : Actor
 {
 	const FIRE_MIN = 350;       // tics between imp fireballs from one segment (10-20 s)
 	const FIRE_MAX = 700;
 
+	const SPIKE_LEN = 40.0;     // sprite height at scale 1
+	const SPIKE_SINK = 6.0;     // how far the spike base sits inside the body
+
 	WormHead head;
+	WormSpike spike;
+	double sc;
 	int fireTimer;
 
 	Default
@@ -63,6 +98,43 @@ class WormSegment : Actor
 		return pos + (0, 0, Height * 0.5);
 	}
 
+	// z of the spike's base, and the tip position
+	double SpikeBaseZ()
+	{
+		return pos.z + Height - SPIKE_SINK * sc;
+	}
+
+	vector3 SpikeTip()
+	{
+		return (pos.x, pos.y, SpikeBaseZ() + SPIKE_LEN * sc);
+	}
+
+	void PlaceSpike()
+	{
+		if (!spike)
+		{
+			spike = WormSpike(Spawn("WormSpike", (pos.x, pos.y, SpikeBaseZ())));
+			if (!spike) return;
+			spike.Scale = (sc, sc);
+		}
+		spike.SetOrigin((pos.x, pos.y, SpikeBaseZ()), true);
+	}
+
+	void RemoveSpike()
+	{
+		if (spike)
+		{
+			spike.Destroy();
+			spike = null;
+		}
+	}
+
+	override void OnDestroy()
+	{
+		RemoveSpike();
+		Super.OnDestroy();
+	}
+
 	override int DamageMobj(Actor inflictor, Actor source, int dmg, Name mod, int flags, double ang)
 	{
 		if (health <= 0 || !head || head.health <= 0) return 0;
@@ -75,6 +147,7 @@ class WormSegment : Actor
 		// movement (it would snap a part that is below the floor back up).
 		if (health <= 0)
 		{
+			RemoveSpike();
 			Super.Tick();
 			return;
 		}
@@ -92,14 +165,14 @@ class WormSegment : Actor
 	{
 		Actor tgt = head.NearestPlayer(Center());
 		if (!tgt) return;
-		vector3 from = Center();
+		vector3 from = SpikeTip();       // fireballs leave from the spike tip, clear of the body
 		vector3 d = (tgt.pos + (0, 0, tgt.Height * 0.6)) - from;
 		double len = d.Length();
 		if (len < 1.0) return;
 		d = d * (1.0 / len);
-		Actor b = Spawn("DoomImpBall", from);
+		Actor b = Spawn("WormBall", from);
 		if (!b) return;
-		b.target = self;                 // Species "WormPart": it passes through the other parts
+		b.target = self;                 // WormBall passes through all worm parts
 		b.Vel = d * b.Speed;
 		b.angle = atan2(d.y, d.x);
 		A_StartSound("imp/attack", CHAN_AUTO);
@@ -220,6 +293,7 @@ class WormHead : Actor
 			s.fireTimer = random(WormSegment.FIRE_MIN, WormSegment.FIRE_MAX);
 			double sc = 1.0 - 0.02 * j;            // the tail tapers a little
 			s.Scale = (sc, sc);
+			s.sc = sc;
 			s.A_SetSize(34.0 * sc, 68.0 * sc);
 			segs.Push(s);
 		}
@@ -345,6 +419,7 @@ class WormHead : Actor
 		WormSegment s = segs[idx];
 		if (!s || s.health <= 0) return;
 		s.SetOrigin(center - (0, 0, s.Height * 0.5), true);
+		s.PlaceSpike();
 	}
 
 	// Only the head hurts on contact.
