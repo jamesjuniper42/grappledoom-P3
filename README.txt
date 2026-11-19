@@ -83,3 +83,8 @@ TROUBLESHOOTING
   WSL/Linux path like \\wsl.localhost\...
 - From a WSL terminal you can also run:
     ./gzdoom.exe -iwad freedoom2.wad -file GrappleMod.pk3 +map GRAPPLE1
+
+GRAPPLE6  the worm arena (run_worm.bat): a big octagonal room with plateaus. A 20-segment worm
+          chases you at your own top speed but turns slowly, so dodge and let it loop back.
+          Only its head hurts on contact; every segment shoots imp fireballs now and then.
+          Kill it to open the west exit door. Order: tutorial -> worm arena -> speedway.

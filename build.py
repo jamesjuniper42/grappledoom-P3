@@ -166,6 +166,43 @@ def make_car_sprites():
         print("car preview saved to", prev)
 
 
+def make_worm_sprites():
+    """WRMHA0 (head, 88 px) and WRMBA0 (body segment, 68 px): shaded spheres, one rotation,
+    bottom-aligned so the sprite's middle is the actor's center."""
+    def sphere(size, base, band, eyes):
+        ss = 4
+        big = size * ss
+        img = Image.new("RGBA", (big, big), (0, 0, 0, 0))
+        px = img.load()
+        r0 = big / 2.0
+        for y in range(big):
+            for x in range(big):
+                dx, dy = (x - r0 + 0.5) / r0, (y - r0 + 0.5) / r0
+                rr = dx * dx + dy * dy
+                if rr > 1.0:
+                    continue
+                nz = (1.0 - rr) ** 0.5
+                lit = max(0.28, -0.4 * dx - 0.5 * dy + 0.75 * nz)
+                stripe = 0.78 if band and int((dy + 1.0) * 6.0) % 2 == 0 else 1.0
+                col = tuple(min(255, int(c * lit * stripe)) for c in base)
+                px[x, y] = col + (255,)
+        if eyes:
+            dr = ImageDraw.Draw(img)
+            for sx in (-1, 1):
+                cx, cy, er = r0 + sx * 0.36 * r0, r0 - 0.18 * r0, 0.17 * r0
+                dr.ellipse([cx - er, cy - er, cx + er, cy + er], fill=(255, 220, 40, 255))
+                pr = er * 0.45
+                dr.ellipse([cx - pr, cy - pr, cx + pr, cy + pr], fill=(20, 0, 0, 255))
+            my = r0 + 0.45 * r0
+            dr.ellipse([r0 - 0.42 * r0, my - 0.12 * r0, r0 + 0.42 * r0, my + 0.12 * r0], fill=(60, 8, 8, 255))
+        return img.resize((size, size), Image.LANCZOS)
+
+    for name, size, base, band, eyes in (("WRMHA0", 88, (170, 80, 50), False, True),
+                                         ("WRMBA0", 68, (110, 160, 70), True, False)):
+        img = sphere(size, base, band, eyes)
+        open(f"{SRC}/sprites/{name}.png", "wb").write(png_with_grab(img, size // 2, size))
+
+
 # --------------------------------------------------------------------------
 # UDMF map builder. Each region is described by directed edges: the sector to
 # the RIGHT of an edge (a -> b) is its front side. Edges present in both
@@ -670,7 +707,7 @@ def build_map4():
 TUT_ROOM3_CY = 4480    # traffic.zs TUT_CY
 
 
-def octagon(cx, cy, a, north=0, south=0):
+def octagon(cx, cy, a, north=0, south=0, west=0):
     """Clockwise octagon of apothem a (flat sides facing N/E/S/W). north/south = half-width
     of a doorway gap in that wall, whose two end vertices are added to the outline."""
     s2 = int(round(a * 0.41421))
@@ -680,7 +717,10 @@ def octagon(cx, cy, a, north=0, south=0):
     pts += [(cx + s2, cy + a), (cx + a, cy + s2), (cx + a, cy - s2), (cx + s2, cy - a)]
     if south:
         pts += [(cx + south, cy - a), (cx - south, cy - a)]
-    pts += [(cx - s2, cy - a), (cx - a, cy - s2), (cx - a, cy + s2)]
+    pts += [(cx - s2, cy - a), (cx - a, cy - s2)]
+    if west:
+        pts += [(cx - a, cy - west), (cx - a, cy + west)]
+    pts += [(cx - a, cy + s2)]
     return pts
 
 
@@ -753,6 +793,48 @@ def build_map5():
 
 
 # --------------------------------------------------------------------------
+# GRAPPLE6: the worm arena. One huge octagonal room (128 m across, ceiling 48 m) with
+# six plateaus. The Worm (worm.zs) lives here; when it dies the door in the west wall
+# opens onto the exit room (door sector tag 10, as in GRAPPLE4).
+# --------------------------------------------------------------------------
+def build_map6():
+    m = Map()
+    A = 2048                                            # apothem: 4096 units = 128 m across
+    arena = m.S(0, 1536, 224, ftex="FLOOR4_8", ctex="CEIL3_5", wall="BROWN1")
+    m.poly(arena, octagon(0, 0, A, west=96))
+
+    # six plateaus: (center x, center y, width, depth, floor height)
+    plateaus = [(-1200, -400, 512, 512, 128), (900, -900, 640, 448, 192), (1300, 600, 384, 384, 256),
+                (-300, 900, 576, 576, 160), (-1300, 1100, 448, 448, 224), (200, 0, 320, 320, 96)]
+    for px, py, w, d, h in plateaus:
+        sec = m.S(h, 1536, 224, ftex="FLAT1", ctex="CEIL3_5", wall="BROWN1")
+        m.box(sec, px - w // 2, py - d // 2, px + w // 2, py + d // 2, arena)
+
+    # exit door and exit room beyond the west wall (same layout as GRAPPLE4)
+    door = m.S(0, 0, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="DOORTRAK", tag=10)
+    room = m.S(0, 160, 176, ftex="FLOOR4_8", ctex="CEIL3_5", wall="STARTAN3")
+    m.poly(door, [(-A - 64, -96), (-A - 64, 96), (-A, 96), (-A, -96)])
+    m.poly(room, [(-A - 400, -296), (-A - 400, -96), (-A - 400, 96), (-A - 400, 296),
+                  (-A - 64, 296), (-A - 64, 96), (-A - 64, -96), (-A - 64, -296)])
+    door_line = ((-A, -96), (-A, 96))
+    m.specials[door_line] = dict(dontpegtop=True)
+    m.override[door_line] = dict(texturetop="BIGDOOR2")
+    exit_line = ((-A - 400, -96), (-A - 400, 96))
+    m.specials[exit_line] = dict(special=243, arg0=0, playeruse=True)       # Exit_Normal
+    m.override[exit_line] = dict(texturemiddle="SW1EXIT")
+
+    m.things = [
+        (0, -1700, 90, 1), (-60, -1700, 90, 2), (60, -1700, 90, 3), (0, -1640, 90, 4),
+        (0, 1500, 270, 30008, {"height": 400}),                     # the Worm, asleep for 5 s
+        (1300, 600, 0, 2012), (-1300, 1100, 0, 2012),               # medikits on plateaus
+        (900, -900, 0, 2011), (-300, 900, 0, 2018),                 # stimpack, green armor
+        (-1200, -400, 0, 2011), (200, 0, 0, 2011),
+        (-A - 250, 0, 0, 2012),                                     # medikit in the exit room
+    ]
+    return m
+
+
+# --------------------------------------------------------------------------
 # Static checks on the ZScript (there is no compiler here)
 # --------------------------------------------------------------------------
 RESERVED = set("""stop loop fail wait goto spawn see melee missile pain death xdeath raise heal crash
@@ -795,11 +877,13 @@ if __name__ == "__main__":
     lint_zscript()
     make_rope_bead()
     make_car_sprites()
+    make_worm_sprites()
     write_map("GRAPPLE1", "grapple1.wad", build_map1())
     write_map("GRAPPLE2", "grapple2.wad", build_map2())
     write_map("GRAPPLE3", "grapple3.wad", build_map3())
     write_map("GRAPPLE4", "grapple4.wad", build_map4())
     write_map("GRAPPLE5", "grapple5.wad", build_map5())
+    write_map("GRAPPLE6", "grapple6.wad", build_map6())
 
     with zipfile.ZipFile("GrappleMod.pk3", "w", zipfile.ZIP_DEFLATED) as z:
         for root, _, files in os.walk(SRC):

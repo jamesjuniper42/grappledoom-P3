@@ -38,6 +38,12 @@ map GRAPPLE4 "Grapple City"
 
 map GRAPPLE5 "Grapple Tutorial"
 {
+	next = "GRAPPLE6"
+	sky1 = "SKY1"
+}
+
+map GRAPPLE6 "Grapple Worm Arena"
+{
 	next = "GRAPPLE2"
 	sky1 = "SKY1"
 }
@@ -51,4 +57,5 @@ DoomEdNums
 	30005 = WaveDirector
 	30006 = WaveSpawn
 	30007 = WaveTrigger
+	30008 = WormHead
 }

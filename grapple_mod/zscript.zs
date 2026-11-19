@@ -6,6 +6,7 @@ version "4.0"
 #include "skid.zs"
 #include "ram.zs"
 #include "wave.zs"
+#include "worm.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a
@@ -344,6 +345,17 @@ class GrapplePlayer : DoomPlayer
 			ClampSlide();
 			mstate = (slideVel.Length() > SLIDE_STOP) ? GS_SLIDE : GS_IDLE;
 		}
+	}
+
+	// A shove from something that hit us (the worm's head): drops any pull or hang and
+	// starts us sliding away at v, with a small hop.
+	void Knock(vector2 v, double up)
+	{
+		if (mstate == GS_PULL || mstate == GS_STUCK) EndPull();
+		slideVel = v;
+		ClampSlide();
+		mstate = GS_SLIDE;
+		Vel.Z = up;
 	}
 
 	// ---------------- hook ----------------
