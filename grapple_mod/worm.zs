@@ -123,7 +123,7 @@ class WormHead : Actor
 	const EXIT_TAG = 10;            // door sector opened when the worm dies
 
 	Array<WormSegment> segs;
-	Array<Vector3> hist;            // recent head centers, oldest first
+	Array<double> hist;             // recent head centers, oldest first, stored as x,y,z triples
 	double yaw;
 	double tilt;
 	double spd;
@@ -172,6 +172,23 @@ class WormHead : Actor
 		return pos + (0, 0, Height * 0.5);
 	}
 
+	void PushHist(vector3 v)
+	{
+		hist.Push(v.x);
+		hist.Push(v.y);
+		hist.Push(v.z);
+	}
+
+	int HistCount()
+	{
+		return hist.Size() / 3;
+	}
+
+	vector3 HistAt(int i)
+	{
+		return (hist[i * 3], hist[i * 3 + 1], hist[i * 3 + 2]);
+	}
+
 	override void PostBeginPlay()
 	{
 		Super.PostBeginPlay();
@@ -191,9 +208,9 @@ class WormHead : Actor
 		vector3 back = (cos(yaw), sin(yaw), 0);
 		for (int k = 90; k >= 1; k--)
 		{
-			hist.Push(c - back * (k * 20.0));
+			PushHist(c - back * (k * 20.0));
 		}
-		hist.Push(c);
+		PushHist(c);
 
 		for (int j = 0; j < SEG_COUNT; j++)
 		{
@@ -285,8 +302,8 @@ class WormHead : Actor
 	{
 		vector3 dir = (cos(yaw) * cos(tilt), sin(yaw) * cos(tilt), sin(tilt));
 		vector3 c = Center() + dir * spd;
-		hist.Push(c);
-		if (hist.Size() > 320) hist.Delete(0, 80);
+		PushHist(c);
+		if (HistCount() > 320) hist.Delete(0, 240);
 		Vel = (0, 0, 0);
 		SetOrigin(c - (0, 0, Height * 0.5), true);
 		angle = yaw;
@@ -295,15 +312,15 @@ class WormHead : Actor
 	// Put every segment on the head's recent path, SEG_SPACING apart by arc length.
 	void PlaceSegments()
 	{
-		int n = hist.Size();
+		int n = HistCount();
 		if (n < 2) return;
 		double need = SEG_SPACING;
 		double acc = 0;
 		int idx = 0;
-		vector3 prev = hist[n - 1];
+		vector3 prev = HistAt(n - 1);
 		for (int i = n - 2; i >= 0 && idx < segs.Size(); i--)
 		{
-			vector3 cur = hist[i];
+			vector3 cur = HistAt(i);
 			vector3 stp = cur - prev;
 			double sl = stp.Length();
 			while (idx < segs.Size() && acc + sl >= need)
@@ -318,7 +335,7 @@ class WormHead : Actor
 		}
 		while (idx < segs.Size())
 		{
-			SetSeg(idx, hist[0]);
+			SetSeg(idx, HistAt(0));
 			idx++;
 		}
 	}
