@@ -88,3 +88,7 @@ GRAPPLE6  the worm arena (run_worm.bat): a big octagonal room with plateaus. A 2
           chases you at your own top speed but turns slowly, so dodge and let it loop back.
           Only its head hurts on contact; every segment shoots imp fireballs now and then.
           Kill it to open the west exit door. Order: tutorial -> worm arena -> speedway.
+
+CO-OP REVIVE  a downed player stays down and a red X flashes over the body. A teammate who runs over
+          the body revives them at 30% health (they come back without their pickups, as with any co-op
+          respawn). Turn it off with the console command: revive_enabled false (host).

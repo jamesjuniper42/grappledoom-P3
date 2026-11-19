@@ -7,6 +7,7 @@ version "4.0"
 #include "ram.zs"
 #include "wave.zs"
 #include "worm.zs"
+#include "revive.zs"
 
 // ---------------------------------------------------------------------------
 // Small glowing dot used to draw the rope. Lives 2 tics; the player spawns a
@@ -118,9 +119,12 @@ class GrapplePlayer : DoomPlayer
 		if (!player || player.mo != self || player.playerstate != PST_LIVE)
 		{
 			StopGrapple();
+			DownedTick();
 			Super.Tick();
 			return;
 		}
+		ClearReviveX();
+		CheckRevive();
 
 		// right mouse press (edge triggered)
 		int btn = player.cmd.buttons;
@@ -349,6 +353,110 @@ class GrapplePlayer : DoomPlayer
 
 	// A shove from something that hit us (the worm's head): drops any pull or hang and
 	// starts us sliding away at v, with a small hop.
+	// ---------------- co-op revive (see revive.zs) ----------------
+	const REVIVE_FRACTION = 0.3;     // health a revived player comes back with
+	const REVIVE_REACH = 16.0;       // extra reach beyond both radii
+
+	Actor reviveX;
+
+	bool ReviveOn()
+	{
+		if (!multiplayer) return false;
+		CVar cv = CVar.FindCVar('revive_enabled');
+		return !cv || cv.GetBool();
+	}
+
+	bool TeammateAlive()
+	{
+		for (int i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!playeringame[i] || !players[i].mo || players[i].mo == self) continue;
+			if (players[i].playerstate == PST_LIVE && players[i].mo.health > 0) return true;
+		}
+		return false;
+	}
+
+	void ClearReviveX()
+	{
+		if (reviveX)
+		{
+			reviveX.Destroy();
+			reviveX = null;
+		}
+	}
+
+	override void OnDestroy()
+	{
+		ClearReviveX();
+		Super.OnDestroy();
+	}
+
+	// A downed player cannot respawn with the use key while a teammate could still revive them.
+	override void DeathThink()
+	{
+		if (ReviveOn() && TeammateAlive()) player.cmd.buttons &= ~BT_USE;
+		Super.DeathThink();
+	}
+
+	// Corpse side: flash an X above it.
+	void DownedTick()
+	{
+		if (!player || player.mo != self || player.playerstate != PST_DEAD || !ReviveOn() || !TeammateAlive())
+		{
+			ClearReviveX();
+			return;
+		}
+		if (!reviveX) reviveX = Spawn("ReviveX", pos + (0, 0, 56));
+		if (!reviveX) return;
+		reviveX.SetOrigin(pos + (0, 0, 56), true);
+		reviveX.bInvisible = ((level.maptime / 10) % 2) == 1;      // flashes about 3.5 times a second
+	}
+
+	// Living side: run over a downed teammate to revive them.
+	void CheckRevive()
+	{
+		if (!ReviveOn() || health <= 0) return;
+		for (int i = 0; i < MAXPLAYERS; i++)
+		{
+			if (!playeringame[i] || players[i].mo == self) continue;
+			if (players[i].playerstate != PST_DEAD) continue;
+			Actor c = players[i].mo;
+			if (!c || c.health > 0) continue;
+			if (abs(c.pos.z - pos.z) > Height) continue;
+			if ((c.pos.xy - pos.xy).Length() > Radius + c.Radius + REVIVE_REACH) continue;
+
+			ReviveMarker m = ReviveMarker(Spawn("ReviveMarker", c.pos));
+			if (!m) continue;
+			m.pnum = i;
+			m.angle = c.angle;
+			PlayerPawn pp = PlayerPawn(c);
+			int maxhp = pp ? pp.MaxHealth : 100;
+			m.hp = max(1, int(maxhp * REVIVE_FRACTION));
+			players[i].playerstate = PST_REBORN;
+			A_PrintBold(String.Format("Reviving %s", players[i].GetUserName()), 2.0);
+		}
+	}
+
+	// New body of a revived player: go to the corpse's spot with reduced health.
+	override void OnRespawn()
+	{
+		Super.OnRespawn();
+		if (!player) return;
+		let it = ThinkerIterator.Create("ReviveMarker");
+		ReviveMarker m;
+		while (m = ReviveMarker(it.Next()))
+		{
+			if (m.pnum != PlayerNumber()) continue;
+			SetOrigin(m.pos, false);
+			angle = m.angle;
+			health = m.hp;
+			player.health = m.hp;
+			Vel = (0, 0, 0);
+			m.Destroy();
+			break;
+		}
+	}
+
 	void Knock(vector2 v, double up)
 	{
 		if (mstate == GS_PULL || mstate == GS_STUCK) EndPull();

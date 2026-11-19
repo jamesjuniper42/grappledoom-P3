@@ -166,6 +166,18 @@ def make_car_sprites():
         print("car preview saved to", prev)
 
 
+def make_revive_sprite():
+    """REVXA0: a red X (with a dark outline) that flashes above a downed player's corpse."""
+    size = 48
+    img = Image.new("RGBA", (size, size), (0, 0, 0, 0))
+    dr = ImageDraw.Draw(img)
+    a, b = 8, size - 8
+    for col, w in (((20, 0, 0, 255), 11), ((255, 30, 30, 255), 6)):
+        dr.line([a, a, b, b], fill=col, width=w)
+        dr.line([a, b, b, a], fill=col, width=w)
+    open(f"{SRC}/sprites/REVXA0.png", "wb").write(png_with_grab(img, size // 2, size // 2))
+
+
 def make_worm_sprites():
     """WRMHA0 (head, 88 px) and WRMBA0 (body segment, 68 px): shaded spheres, one rotation,
     bottom-aligned so the sprite's middle is the actor's center."""
@@ -878,6 +890,7 @@ if __name__ == "__main__":
     make_rope_bead()
     make_car_sprites()
     make_worm_sprites()
+    make_revive_sprite()
     write_map("GRAPPLE1", "grapple1.wad", build_map1())
     write_map("GRAPPLE2", "grapple2.wad", build_map2())
     write_map("GRAPPLE3", "grapple3.wad", build_map3())

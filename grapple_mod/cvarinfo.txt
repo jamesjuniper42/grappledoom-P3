@@ -6,3 +6,7 @@ server noarchive string ff_p1 = "1";
 server noarchive string ff_p2 = "2";
 server noarchive string ff_p3 = "3";
 server noarchive string ff_p4 = "4";
+
+// Co-op revive: downed players stay down and a teammate can run over the corpse to revive them
+// (30% health). Set revive_enabled false to use the normal respawn-with-use instead.
+server bool revive_enabled = true;
